@@ -49,6 +49,13 @@ class OrderedDict:
     def __len__(self):
         return len(self.by_key)
 
+    def __iter__(self):
+        return self.keys()
+
+    def __next__(self):
+        for key in self.keys():
+            yield key
+
     def count(self) -> int:
         return self._count
 
