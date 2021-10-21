@@ -9,3 +9,10 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+## Tests
+pytest is used for writing and executing tests
+to run tests you can execute:
+```
+pytest -s -v tests/
+
+```

@@ -46,6 +46,9 @@ class OrderedDict:
             s += f"{{{key}: {value}}}"
         return f"OrderedDict({s})"
 
+    def __len__(self):
+        return len(self.by_key)
+
     def count(self) -> int:
         return self._count
 

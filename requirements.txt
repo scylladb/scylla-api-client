@@ -1,2 +1,3 @@
 pyswagger
 requests
+pytest
