@@ -97,6 +97,22 @@ def test(node_address:str, port:int) -> ScyllaApi:
 
     return test_api
 
+def mock_api(node_address:str, port:int) -> ScyllaApi:
+    logger_command = ScyllaApiCommand('logger')
+    logger_get = ScyllaApiCommand.Method(ScyllaApiCommand.Method.GET, 'Get all logger names')
+    logger_command.add_method(logger_get)
+    logger_post = ScyllaApiCommand.Method(ScyllaApiCommand.Method.POST, 'Set all logger level')
+    logger_post.add_option(ScyllaApiOption('level', allowed_values=['error', 'warn', 'info', 'debug', 'trace'], help='The new log level'))
+    logger_command.add_method(logger_post)
+
+    system_module = ScyllaApiModule('system')
+    system_module.add_command(logger_command)
+
+    scylla_api = ScyllaApi(node_address=node_address, port=port)
+    scylla_api.add_module(system_module)
+
+    return scylla_api
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Scylla api command line interface.')
     parser.add_argument('-a', '--address', dest='address', type=str, default=ScyllaApi.default_address,
@@ -128,7 +144,7 @@ if __name__ == '__main__':
         scylla_api = test(args.address, args.port)
     else:
         # for now
-        scylla_api = ScyllaApi()
+        scylla_api = mock_api(args.address, args.port)
 
     if args.list_api or args.list_modules or args.list_module_commands:
         list_api(scylla_api, args.list_modules, args.list_module_commands)
