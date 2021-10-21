@@ -39,25 +39,53 @@ class PositionalDict:
             s += f"{{{key}: {value}}}"
         return f"PositionalDict({s})"
 
-class ApiCommand:
-    class Option:
-        def __init__(self, name:str, positional:bool=False, can_be_list:bool=False, help:str=''):
-            self.name = name
-            self.positional = positional
-            self.can_be_list = can_be_list
-            self.help = help
+class ScyllaApiOption:
+    # init Command
+    def __init__(self, name:str, positional:bool=False, can_be_list:bool=False, help:str=''):
+        self.name = name
+        self.positional = positional
+        self.can_be_list = can_be_list
+        self.help = help
 
-        def __repr__(self):
-            return f"Option(name={self.name}, positional={self.positional}, can_be_list={self.can_be_list}, help={self.help})"
+    def __repr__(self):
+        return f"ApiCommandOption(name={self.name}, positional={self.positional}, can_be_list={self.can_be_list}, help={self.help})"
 
-    def __init__(self, name:str, options:PositionalDict):
+class ScyllaApiCommand:
+    # init Command
+    def __init__(self, name:str, options:PositionalDict=PositionalDict()):
         self.name = name
         self.options = options
 
     def __repr__(self):
         return f"ApiCommand(name={self.name}, options={self.options})"
 
-class ApiModule:
-    def __init__(self, name:str, commands:PositionalDict):
+    def add_option(self, option:ScyllaApiOption):
+        self.options.insert(option.name, option)
+
+class ScyllaApiModule:
+    # init Module
+    def __init__(self, name:str, commands:PositionalDict=PositionalDict()):
         self.name = name
         self.commands = commands
+
+    def __repr__(self):
+        return f"ApiModule(name={self.name} commands={self.commands})"
+
+    def add_command(self, command:ScyllaApiCommand):
+        self.commands.insert(command.name, command)
+
+class ScyllaApi:
+    default_address = 'localhost'
+    default_port = 10000
+
+    # init ScyllaApi
+    def __init__(self, node_address:str=default_address, port:int=default_port):
+        self.node_address = node_address
+        self.port = port
+        self.modules = PositionalDict()
+
+    def __repr__(self):
+        return f"ScyllaApi(node_address={self.node_address}, port={self.port}, modules={self.modules})"
+
+    def add_module(self, module:ScyllaApiModule):
+        self.modules.insert(module.name, module)
