@@ -24,11 +24,14 @@ class OrderedDict:
     def __add__(self, key, value):
         self.insert(key, value)
 
-    def __getitem__(self, key):
-        if type(key) is int:
-            return self.by_pos[key]
+    def __getitem__(self, idx_or_key):
+        if type(idx_or_key) is int:
+            if idx_or_key not in self.by_pos:
+                raise IndexError('OrderedDict index out of range')
+            key = self.by_pos[idx_or_key]
         else:
-            return self.by_key[key]
+            key = idx_or_key
+        return self.by_key[key]
 
     def __repr__(self):
         s = ''

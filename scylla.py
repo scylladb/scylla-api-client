@@ -20,13 +20,33 @@ def test(node_address:str, port:int):
     test_command.add_option(ScyllaApiOption('test_positional_option_1', positional=True, help='help for test_positional_option_1'))
     test_command.add_option(ScyllaApiOption('test_option_2', help='help for test_option_2'))
 
+    assert test_command.options[0].name == 'test_positional_option_1'
+    assert test_command.options[1].name == 'test_option_2'
+
     test_module = ScyllaApiModule('test_module')
     test_module.add_command(test_command)
+
+    test_command_1 = ScyllaApiCommand('test_command_1')
+    test_command_1.add_option(ScyllaApiOption('test_positional_option_1_1', positional=True, help='help for test_positional_option_1_1'))
+    test_command_1.add_option(ScyllaApiOption('test_option_1_2', help='help for test_option_1_2'))
+    test_module.add_command(test_command_1)
+
+    assert test_module.commands[0] == test_command
+    assert test_module.commands[1] == test_command_1
 
     test_api = ScyllaApi(node_address=node_address, port=port)
     test_api.add_module(test_module)
 
-    log.info(f"{test_api}")
+    test_module_1 = ScyllaApiModule('test_module_1')
+    test_module_1.add_command(test_command_1)
+    test_api.add_module(test_module_1)
+
+    log.debug(f"{test_api}")
+
+    assert test_api.modules[0] == test_module
+    assert test_api.modules[1] == test_module_1
+    assert test_api.modules['test_module'] == test_module
+    assert test_api.modules['test_module_1'] == test_module_1
 
     log.debug('Test done')
 
