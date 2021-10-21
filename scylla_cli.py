@@ -6,7 +6,10 @@ import logging
 
 log = logging.getLogger('scylla.cli')
 
-class PositionalDict:
+"""
+A dictionary that keeps the insertion order
+"""
+class OrderedDict:
     def __init__(self):
         self.pos = 0
         self.by_key = dict()
@@ -37,7 +40,7 @@ class PositionalDict:
             key = self.by_pos[i]
             value = self.by_key[key]
             s += f"{{{key}: {value}}}"
-        return f"PositionalDict({s})"
+        return f"OrderedDict({s})"
 
 class ScyllaApiOption:
     # init Command
@@ -52,7 +55,7 @@ class ScyllaApiOption:
 
 class ScyllaApiCommand:
     # init Command
-    def __init__(self, name:str, options:PositionalDict=PositionalDict()):
+    def __init__(self, name:str, options:OrderedDict=OrderedDict()):
         self.name = name
         self.options = options
 
@@ -64,7 +67,7 @@ class ScyllaApiCommand:
 
 class ScyllaApiModule:
     # init Module
-    def __init__(self, name:str, commands:PositionalDict=PositionalDict()):
+    def __init__(self, name:str, commands:OrderedDict=OrderedDict()):
         self.name = name
         self.commands = commands
 
@@ -82,7 +85,7 @@ class ScyllaApi:
     def __init__(self, node_address:str=default_address, port:int=default_port):
         self.node_address = node_address
         self.port = port
-        self.modules = PositionalDict()
+        self.modules = OrderedDict()
 
     def __repr__(self):
         return f"ScyllaApi(node_address={self.node_address}, port={self.port}, modules={self.modules})"
