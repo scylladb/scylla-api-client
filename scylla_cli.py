@@ -3,6 +3,7 @@ Simple Scylla REST API client module
 """
 
 import logging
+import re
 
 log = logging.getLogger('scylla.cli')
 
@@ -69,17 +70,29 @@ class ScyllaApiOption:
     def __repr__(self):
         return f"ApiCommandOption(name={self.name}, positional={self.positional}, allowed_values={self.allowed_values}, help={self.help})"
 
+    def __str__(self):
+        return f"option_name={self.name}, positional={self.positional}, allowed_values={self.allowed_values}, help={self.help}"
+
 class ScyllaApiCommand:
     class Method:
         GET = 0
         POST = 1
+        kind_strings = ['GET', 'POST']
 
-        def __init__(self, kind=GET, options:OrderedDict=None):
+        def __init__(self, kind=GET, desc:str='', options:OrderedDict=None):
             self.kind = kind
+            self.desc = desc
             self.options = options or OrderedDict()
 
         def __repr__(self):
-            return f"Method(kind={self.kind}, options={self.options})"
+            return f"Method(kind={self.kind}, desc={self.desc}, options={self.options})"
+
+        def __str__(self):
+            s = f"{self.kind_strings[self.kind]}: {self.desc}"
+            for opt_name in self.options.keys():
+                opt = self.options[opt_name]
+                s += f"\n        {opt}"
+            return s
 
         def add_option(self, option:ScyllaApiOption):
             self.options.insert(option.name, option)
@@ -92,6 +105,14 @@ class ScyllaApiCommand:
     def __repr__(self):
         return f"ApiCommand(name={self.name}, methods={self.methods})"
 
+    def __str__(self):
+        s = f"{self.name}:"
+        for _, method in self.methods.items():
+            method_str = f"{method}"
+            re.sub('\n', '\n      ', method_str)
+            s += f"\n      {method_str}"
+        return s
+
     def add_method(self, method:Method):
         self.methods[method.kind] = method
 
@@ -103,6 +124,17 @@ class ScyllaApiModule:
 
     def __repr__(self):
         return f"ApiModule(name={self.name} commands={self.commands})"
+
+    def __str__(self):
+        s = f"{self.name}:"
+        for command_name in self.commands.keys():
+            command = self.commands[command_name]
+            if s:
+                s += '\n'
+            command_str = f"{command}"
+            re.sub('\n', '\n    ', command_str)
+            s += f"\n  {command_str}"
+        return s
 
     def add_command(self, command:ScyllaApiCommand):
         self.commands.insert(command.name, command)
@@ -119,6 +151,15 @@ class ScyllaApi:
 
     def __repr__(self):
         return f"ScyllaApi(node_address={self.node_address}, port={self.port}, modules={self.modules})"
+
+    def __str__(self):
+        s = ''
+        for module_name in self.modules.keys():
+            module = self.modules[module_name]
+            if s:
+                s += '\n'
+            s += f"{module}"
+        return s
 
     def add_module(self, module:ScyllaApiModule):
         self.modules.insert(module.name, module)
