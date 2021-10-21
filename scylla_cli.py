@@ -60,26 +60,40 @@ class OrderedDict:
 
 class ScyllaApiOption:
     # init Command
-    def __init__(self, name:str, positional:bool=False, can_be_list:bool=False, help:str=''):
+    def __init__(self, name:str, positional:bool=False, allowed_values=[], help:str=''):
         self.name = name
         self.positional = positional
-        self.can_be_list = can_be_list
+        self.allowed_values = allowed_values
         self.help = help
 
     def __repr__(self):
-        return f"ApiCommandOption(name={self.name}, positional={self.positional}, can_be_list={self.can_be_list}, help={self.help})"
+        return f"ApiCommandOption(name={self.name}, positional={self.positional}, allowed_values={self.allowed_values}, help={self.help})"
 
 class ScyllaApiCommand:
+    class Method:
+        GET = 0
+        POST = 1
+
+        def __init__(self, kind=GET, options:OrderedDict=None):
+            self.kind = kind
+            self.options = options or OrderedDict()
+
+        def __repr__(self):
+            return f"Method(kind={self.kind}, options={self.options})"
+
+        def add_option(self, option:ScyllaApiOption):
+            self.options.insert(option.name, option)
+
     # init Command
-    def __init__(self, name:str, options:OrderedDict=None):
+    def __init__(self, name:str):
         self.name = name
-        self.options = options or OrderedDict()
+        self.methods = dict()
 
     def __repr__(self):
-        return f"ApiCommand(name={self.name}, options={self.options})"
+        return f"ApiCommand(name={self.name}, methods={self.methods})"
 
-    def add_option(self, option:ScyllaApiOption):
-        self.options.insert(option.name, option)
+    def add_method(self, method:Method):
+        self.methods[method.kind] = method
 
 class ScyllaApiModule:
     # init Module
