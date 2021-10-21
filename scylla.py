@@ -54,11 +54,13 @@ def test(node_address:str, port:int) -> ScyllaApi:
 
     test_module = ScyllaApiModule('test_module')
     test_module.add_command(test_command)
+    assert test_module.commands.count() == 1, f"Expect len to be 1, but got {test_module.commands.count()}"
 
     test_command_1 = ScyllaApiCommand('test_command_1')
     test_command_1.add_option(ScyllaApiOption('test_positional_option_1_1', positional=True, help='help for test_positional_option_1_1'))
     test_command_1.add_option(ScyllaApiOption('test_option_1_2', help='help for test_option_1_2'))
     test_module.add_command(test_command_1)
+    assert test_module.commands.count() == 2, f"Expect len to be 1, but got {test_module.commands.count()}"
 
     assert test_module.commands[0] == test_command
     assert test_module.commands[1] == test_command_1
@@ -67,7 +69,10 @@ def test(node_address:str, port:int) -> ScyllaApi:
     test_api.add_module(test_module)
 
     test_module_1 = ScyllaApiModule('test_module_1')
+    assert test_module_1.commands.count() == 0, f"Expect len to be 0, but got {test_module_1.commands.count()}"
     test_module_1.add_command(test_command_1)
+    assert test_module_1.commands.count() == 1, f"Expect len to be 1, but got {test_module_1.commands.count()}"
+
     test_api.add_module(test_module_1)
 
     log.debug(f"{test_api}")

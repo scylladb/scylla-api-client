@@ -11,15 +11,18 @@ A dictionary that keeps the insertion order
 """
 class OrderedDict:
     def __init__(self):
-        self.pos = 0
+        self._pos = 0
+        self._count = 0
+
         self.by_key = dict()
         self.by_pos = dict()
 
     def insert(self, key, value):
         assert type(key) is not int
         self.by_key[key] = value
-        self.by_pos[self.pos] = key
-        self.pos += 1
+        self.by_pos[self._pos] = key
+        self._pos += 1
+        self._count += 1
 
     def __add__(self, key, value):
         self.insert(key, value)
@@ -42,8 +45,11 @@ class OrderedDict:
             s += f"{{{key}: {value}}}"
         return f"OrderedDict({s})"
 
+    def count(self) -> int:
+        return self._count
+
     def keys(self):
-        for i in range(0, self.pos):
+        for i in range(0, self._pos):
             if i not in self.by_pos:
                 continue
             yield self.by_pos[i]
@@ -65,9 +71,9 @@ class ScyllaApiOption:
 
 class ScyllaApiCommand:
     # init Command
-    def __init__(self, name:str, options:OrderedDict=OrderedDict()):
+    def __init__(self, name:str, options:OrderedDict=None):
         self.name = name
-        self.options = options
+        self.options = options or OrderedDict()
 
     def __repr__(self):
         return f"ApiCommand(name={self.name}, options={self.options})"
@@ -77,9 +83,9 @@ class ScyllaApiCommand:
 
 class ScyllaApiModule:
     # init Module
-    def __init__(self, name:str, commands:OrderedDict=OrderedDict()):
+    def __init__(self, name:str, commands:OrderedDict=None):
         self.name = name
-        self.commands = commands
+        self.commands = commands or OrderedDict()
 
     def __repr__(self):
         return f"ApiModule(name={self.name} commands={self.commands})"
