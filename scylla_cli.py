@@ -32,15 +32,22 @@ class OrderedDict:
 
     def __repr__(self):
         s = ''
-        for i in range(0, self.pos):
-            if i not in self.by_pos:
-                continue
+        for key in self.keys():
             if s:
                 s += ', '
-            key = self.by_pos[i]
             value = self.by_key[key]
             s += f"{{{key}: {value}}}"
         return f"OrderedDict({s})"
+
+    def keys(self):
+        for i in range(0, self.pos):
+            if i not in self.by_pos:
+                continue
+            yield self.by_pos[i]
+
+    def items(self):
+        for key in self.keys():
+            yield self.by_key[key]
 
 class ScyllaApiOption:
     # init Command
