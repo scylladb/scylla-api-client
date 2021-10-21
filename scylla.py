@@ -13,6 +13,23 @@ log = logging.getLogger('scylla.cli.util')
 
 from scylla_cli import ScyllaApi, ScyllaApiModule, ScyllaApiCommand, ScyllaApiOption
 
+def test(node_address:str, port:int):
+    log.debug('Starting test')
+
+    test_command = ScyllaApiCommand('test_command')
+    test_command.add_option(ScyllaApiOption('test_positional_option_1', positional=True, help='help for test_positional_option_1'))
+    test_command.add_option(ScyllaApiOption('test_option_2', help='help for test_option_2'))
+
+    test_module = ScyllaApiModule('test_module')
+    test_module.add_command(test_command)
+
+    test_api = ScyllaApi(node_address=node_address, port=port)
+    test_api.add_module(test_module)
+
+    log.info(f"{test_api}")
+
+    log.debug('Test done')
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Scylla api command line interface.')
     parser.add_argument('-a', '--address', dest='address', type=str, default=ScyllaApi.default_address,
@@ -33,21 +50,7 @@ if __name__ == '__main__':
     log.debug('Starting')
 
     if args.test:
-        log.debug('Starting test')
-
-        test_command = ScyllaApiCommand('test_command')
-        test_command.add_option(ScyllaApiOption('test_positional_option_1', positional=True, help='help for test_positional_option_1'))
-        test_command.add_option(ScyllaApiOption('test_option_2', help='help for test_option_2'))
-    
-        test_module = ScyllaApiModule('test_module')
-        test_module.add_command(test_command)
-
-        test_api = ScyllaApi()
-        test_api.add_module(test_module)
-
-        log.info(f"{test_api}")
-
-        log.debug('Test done')
+        test(args.address, args.port)
 
     log.debug('done')
     logging.shutdown()
