@@ -43,3 +43,13 @@ def test_OrderedDict_keys():
     all_keys = ["key1", "key2", "key3"]
 
     assert list(d.keys()) == all_keys
+
+
+def test_interator():
+    d = OrderedDict()
+    for i in range(5):
+        d.insert(f"k{i}", f"v{i}")
+    it = iter(d)
+    for i, key in enumerate(it):
+        assert key == f"k{i}"
+        assert d[key] == f"v{i}"
