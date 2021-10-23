@@ -14,6 +14,7 @@ class OrderedDict:
     def __init__(self):
         self._pos = 0
         self._count = 0
+        self._cur_pos = 0
 
         self.by_key = dict()
         self.by_pos = dict()
@@ -45,6 +46,20 @@ class OrderedDict:
             value = self.by_key[key]
             s += f"{{{key}: {value}}}"
         return f"OrderedDict({s})"
+
+    def __len__(self):
+        return len(self.by_key)
+
+    def __iter__(self):
+        self._cur_pos = 0
+        return self
+
+    def __next__(self):
+        next_key = self.by_pos[self._cur_pos]
+        self._cur_pos += 1
+        if self._cur_pos >= self._count:
+            raise StopIteration
+        return next_key
 
     def count(self) -> int:
         return self._count
