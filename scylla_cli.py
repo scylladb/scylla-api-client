@@ -223,11 +223,8 @@ class ScyllaApiCommand:
 
     def invoke(self, argv=[]):
         method_kind = None
-        if len(argv):
-            try:
-                method_kind = self.Method.str_to_kind[argv[0]]
-            except KeyError:
-                pass
+        if len(argv) and argv[0] in self.Method.str_to_kind:
+            method_kind = self.Method.str_to_kind[argv[0]]
         if method_kind is None:
             if len(self.methods) == 1:
                 method_kind = list(self.methods.keys())[0]
@@ -235,7 +232,7 @@ class ScyllaApiCommand:
             print(f"{self.name}: {self.Method.kind_to_str[method_kind]} method is not supported")
             return
 
-        log.debug(f"Invoking {self.name} {self.Method.kind_to_str[method_kind] if method_kind is not None else ''} {argv}")
+        log.debug(f"Invoking {self.name} {self.Method.kind_to_str[method_kind] if method_kind is not None else 'None'} {argv}")
         print_help = '-h' in argv or '--help' in argv
         if print_help:
             print(f"{self.name} API syntax:\n")
@@ -249,7 +246,7 @@ class ScyllaApiCommand:
                 print(f"{m.get_help()}")
         if print_help:
             return
-        if not method_kind:
+        if method_kind is None:
             print(f"{self.name}: request method not specified. Use one of {'|'.join(kind_strings)}.")
             return
         try:
