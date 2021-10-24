@@ -103,7 +103,10 @@ def load_api(node_address:str, port:int) -> ScyllaApi:
     return scylla_api
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Scylla api command line interface.')
+    parser = argparse.ArgumentParser(description='Scylla api command line interface.', add_help=False)
+    parser.add_argument('-h', '--help', dest='help', action='store_const', const=True, default=False,
+                        help=f"Show this help message and exit")
+
     parser.add_argument('-a', '--address', dest='address', type=str, default=ScyllaApi.default_address,
                         help=f"IP address of server node (default: {ScyllaApi.default_address})")
     parser.add_argument('-p', '--port', dest='port', type=int, default=ScyllaApi.default_port,
@@ -128,6 +131,10 @@ if __name__ == '__main__':
 
     args = argparse.Namespace()
     parser.parse_args(namespace=args)
+
+    if args.help and not args.command:
+        parser.print_help()
+        exit
 
     logging.basicConfig(format='%(asctime)s,%(msecs)03d %(process)-7d %(name)-25s %(levelname)-8s | %(message)s')
     baselog.setLevel(logging.DEBUG if args.debug else logging.INFO)
@@ -179,7 +186,10 @@ if __name__ == '__main__':
                 print(f"Could not find command '{command_name}'")
                 exit(1)
 
-        command.invoke(node_address=args.address, port=args.port, argv=args.command_args)
+        argv = args.command_args
+        if args.help:
+            argv.append('-h')
+        command.invoke(node_address=args.address, port=args.port, argv=argv)
 
     log.debug('done')
     logging.shutdown()
