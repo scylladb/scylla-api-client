@@ -4,6 +4,7 @@ Simple Scylla REST API client module
 
 import logging
 import re
+import json
 
 from rest.scylla_rest_client import ScyllaRestClient
 
@@ -136,6 +137,26 @@ class ScyllaApiCommand:
     def add_method(self, method:Method):
         self.methods[method.kind] = method
 
+    def load_json(self, command_json:dict):
+        log.debug(f"Loading: {json.dumps(command_json, indent=4)}")
+        for operation_def in command_json["operations"]:
+            operation = None
+            if operation_def["method"].upper() == "GET":
+                operation = ScyllaApiCommand.Method(ScyllaApiCommand.Method.GET,
+                                                    operation_def["summary"])
+            elif operation_def["method"].upper() == "POST":
+                operation = ScyllaApiCommand.Method(ScyllaApiCommand.Method.POST,
+                                                    operation_def["summary"])
+                for param_def in operation_def["parameters"]:
+                    operation.add_option(ScyllaApiOption(param_def["name"],
+                                            allowed_values=param_def.get("enum", []),
+                                            help=param_def["description"]))
+            # FIXME: handle DELETE
+            if operation:
+                self.add_method(operation)
+            else:
+                log.warn(f"Operation not supported yet: {json.dumps(operation_def, indent=4)}")
+
 class ScyllaApiModule:
     # init Module
     def __init__(self, name:str, desc:str='', commands:OrderedDict=None):
@@ -200,18 +221,6 @@ class ScyllaApi:
                 if command_path.startswith(module_path):
                     command_path = command_path[len(module_path)+1:]
                 command = ScyllaApiCommand(command_path)
-                for operation_def in command_json["operations"]:
-                    if operation_def["method"].upper() == "GET":
-                        operation = ScyllaApiCommand.Method(ScyllaApiCommand.Method.GET,
-                                                            operation_def["summary"])
-                    elif operation_def["method"].upper() == "POST":
-                        operation = ScyllaApiCommand.Method(ScyllaApiCommand.Method.POST,
-                                                            operation_def["summary"])
-                        for param_def in operation_def["parameters"]:
-                            operation.add_option(ScyllaApiOption(param_def["name"],
-                                                allowed_values=param_def.get("enum", []),
-                                                help=param_def["description"]))
-                    # FIXME: handle DELETE
-                    command.add_method(operation)
+                command.load_json(command_json)
                 module.add_command(command)
             self.add_module(module)
