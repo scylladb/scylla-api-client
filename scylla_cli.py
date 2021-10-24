@@ -96,7 +96,8 @@ class ScyllaApiCommand:
     class Method:
         GET = 0
         POST = 1
-        kind_strings = ['GET', 'POST']
+        DELETE = 2
+        kind_strings = ['GET', 'POST', 'DELETE']
 
         def __init__(self, kind=GET, desc:str='', options:OrderedDict=None):
             self.kind = kind
@@ -151,7 +152,14 @@ class ScyllaApiCommand:
                     operation.add_option(ScyllaApiOption(param_def["name"],
                                             allowed_values=param_def.get("enum", []),
                                             help=param_def["description"]))
-            # FIXME: handle DELETE
+            elif operation_def["method"].upper() == "DELETE":
+                operation = ScyllaApiCommand.Method(ScyllaApiCommand.Method.DELETE,
+                                                    operation_def["summary"])
+                for param_def in operation_def["parameters"]:
+                    operation.add_option(ScyllaApiOption(param_def["name"],
+                                            allowed_values=param_def.get("enum", []),
+                                            help=param_def["description"]))
+
             if operation:
                 self.add_method(operation)
             else:
