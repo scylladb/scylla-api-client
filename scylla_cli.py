@@ -121,6 +121,8 @@ class ScyllaApiCommand:
     # init Command
     def __init__(self, name:str):
         self.name = name
+        self.name_format = name
+        re.sub(r'/\{.*$', '', self.name)
         self.methods = dict()
         log.debug(f"Created {self.__repr__()}")
 
