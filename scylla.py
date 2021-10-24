@@ -147,8 +147,11 @@ if __name__ == '__main__':
         exit
 
     if args.command:
-        if '/' in args.command:
-            module_name, command_name = args.command.split('/')
+        command_name = args.command.strip(' /')
+        sep = command_name.find('/')
+        if sep > 0:
+            module_name = command_name[:sep]
+            command_name = command_name[sep+1:]
             try:
                 module = scylla_api.modules[module_name]
             except KeyError:
@@ -160,7 +163,6 @@ if __name__ == '__main__':
                 print(f"Could not find command '{command_name}' in module '{module_name}'")
                 exit(1)
         else:
-            command_name = args.command
             module = None
             command = None
             for m in scylla_api.modules.items():
