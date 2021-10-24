@@ -7,7 +7,6 @@ Usage::
 
 import argparse
 import logging
-from rest.scylla_rest_client import ScyllaRestClient
 
 baselog = logging.getLogger('scylla.cli')
 log = logging.getLogger('scylla.cli.util')
@@ -77,7 +76,7 @@ def test(node_address:str, port:int) -> ScyllaApi:
     assert test_module.commands[0] == test_command
     assert test_module.commands[1] == test_command_1
 
-    test_api = ScyllaApi(node_address=node_address, port=port)
+    test_api = ScyllaApi()
     test_api.add_module(test_module)
 
     test_module_1 = ScyllaApiModule('test_module_1')
@@ -100,36 +99,8 @@ def test(node_address:str, port:int) -> ScyllaApi:
 
 # FIXME: better name
 def load_api(node_address:str, port:int) -> ScyllaApi:
-    client = ScyllaRestClient()
-    scylla_api = ScyllaApi(node_address=node_address, port=port)
-
-    # FIXME: handle service down, assert minimum version
-    top_json = client.get_raw_api_json()
-    for module_def in top_json["apis"]:
-        # FIXME: handle service down, errors
-        module_json = client.get_raw_api_json(f"{module_def['path']}/")
-        module_path = module_def['path'].strip(' /')
-        module = ScyllaApiModule(module_path, module_def['description'])
-        for command_json in module_json["apis"]:
-            command_path = command_json['path'].strip(' /')
-            if command_path.startswith(module_path):
-                command_path = command_path[len(module_path)+1:]
-            command = ScyllaApiCommand(command_path)
-            for operation_def in command_json["operations"]:
-                if operation_def["method"].upper() == "GET":
-                    operation = ScyllaApiCommand.Method(ScyllaApiCommand.Method.GET,
-                                                        operation_def["summary"])
-                elif operation_def["method"].upper() == "POST":
-                    operation = ScyllaApiCommand.Method(ScyllaApiCommand.Method.POST,
-                                                        operation_def["summary"])
-                    for param_def in operation_def["parameters"]:
-                        operation.add_option(ScyllaApiOption(param_def["name"],
-                                             allowed_values=param_def.get("enum", []),
-                                             help=param_def["description"]))
-                # FIXME: handle DELETE
-                command.add_method(operation)
-            module.add_command(command)
-        scylla_api.add_module(module)
+    scylla_api = ScyllaApi()
+    scylla_api.load(node_address, port)
     return scylla_api
 
 if __name__ == '__main__':

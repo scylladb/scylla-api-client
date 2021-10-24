@@ -5,6 +5,8 @@ Simple Scylla REST API client module
 import logging
 import re
 
+from rest.scylla_rest_client import ScyllaRestClient
+
 log = logging.getLogger('scylla.cli')
 
 """
@@ -164,10 +166,9 @@ class ScyllaApi:
     default_port = 10000
 
     # init ScyllaApi
-    def __init__(self, node_address:str=default_address, port:int=default_port):
-        self.node_address = node_address
-        self.port = port
+    def __init__(self):
         self.modules = OrderedDict()
+        self.client = None
 
     def __repr__(self):
         return f"ScyllaApi(node_address={self.node_address}, port={self.port}, modules={self.modules})"
@@ -183,3 +184,34 @@ class ScyllaApi:
 
     def add_module(self, module:ScyllaApiModule):
         self.modules.insert(module.name, module)
+
+    def load(self, node_address:str=default_address, port:int=default_port):
+        self.client = ScyllaRestClient(host=node_address, port=port)
+
+        # FIXME: handle service down, assert minimum version
+        top_json = self.client.get_raw_api_json()
+        for module_def in top_json["apis"]:
+            # FIXME: handle service down, errors
+            module_json = self.client.get_raw_api_json(f"{module_def['path']}/")
+            module_path = module_def['path'].strip(' /')
+            module = ScyllaApiModule(module_path, module_def['description'])
+            for command_json in module_json["apis"]:
+                command_path = command_json['path'].strip(' /')
+                if command_path.startswith(module_path):
+                    command_path = command_path[len(module_path)+1:]
+                command = ScyllaApiCommand(command_path)
+                for operation_def in command_json["operations"]:
+                    if operation_def["method"].upper() == "GET":
+                        operation = ScyllaApiCommand.Method(ScyllaApiCommand.Method.GET,
+                                                            operation_def["summary"])
+                    elif operation_def["method"].upper() == "POST":
+                        operation = ScyllaApiCommand.Method(ScyllaApiCommand.Method.POST,
+                                                            operation_def["summary"])
+                        for param_def in operation_def["parameters"]:
+                            operation.add_option(ScyllaApiOption(param_def["name"],
+                                                allowed_values=param_def.get("enum", []),
+                                                help=param_def["description"]))
+                    # FIXME: handle DELETE
+                    command.add_method(operation)
+                module.add_command(command)
+            self.add_module(module)
