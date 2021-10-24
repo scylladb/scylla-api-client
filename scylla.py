@@ -47,7 +47,7 @@ def test(node_address:str, port:int) -> ScyllaApi:
 
     test_command = ScyllaApiCommand('test_command')
     get_method = ScyllaApiCommand.Method(ScyllaApiCommand.Method.GET)
-    get_method.add_option(ScyllaApiOption('test_positional_get_option_1', positional=True, help='help for test_positional_get_option_1'))
+    get_method.add_option(ScyllaApiOption('test_positional_get_option_1', param_type='path', help='help for test_positional_get_option_1'))
     get_method.add_option(ScyllaApiOption('test_get_option_2', help='help for test_get_option_2'))
     test_command.add_method(get_method)
 
@@ -67,7 +67,7 @@ def test(node_address:str, port:int) -> ScyllaApi:
 
     test_command_1 = ScyllaApiCommand('test_command_1')
     get_method = ScyllaApiCommand.Method(ScyllaApiCommand.Method.GET)
-    get_method.add_option(ScyllaApiOption('test_positional_get_option_1_1', positional=True, help='help for test_positional_get_option_1_1'))
+    get_method.add_option(ScyllaApiOption('test_positional_get_option_1_1', param_type='path', help='help for test_positional_get_option_1_1'))
     get_method.add_option(ScyllaApiOption('test_get_option_1_2', help='help for test_get_option_1_2'))
     test_command_1.add_method(get_method)
     test_module.add_command(test_command_1)

@@ -79,18 +79,18 @@ class OrderedDict:
 
 class ScyllaApiOption:
     # init Command
-    def __init__(self, name:str, positional:bool=False, allowed_values=[], help:str=''):
+    def __init__(self, name:str, param_type:str='query', allowed_values=[], help:str=''):
         self.name = name
-        self.positional = positional
+        self.param_type = param_type
         self.allowed_values = allowed_values
         self.help = help
         log.debug(f"Created {self.__repr__()}")
 
     def __repr__(self):
-        return f"ApiCommandOption(name={self.name}, positional={self.positional}, allowed_values={self.allowed_values}, help={self.help})"
+        return f"ApiCommandOption(name={self.name}, param_type={self.param_type}, allowed_values={self.allowed_values}, help={self.help})"
 
     def __str__(self):
-        return f"option_name={self.name}, positional={self.positional}, allowed_values={self.allowed_values}, help={self.help}"
+        return f"option_name={self.name}, param_type={self.param_type}, allowed_values={self.allowed_values}, help={self.help}"
 
 class ScyllaApiCommand:
     class Method:
@@ -120,8 +120,7 @@ class ScyllaApiCommand:
 
     # init Command
     def __init__(self, name:str):
-        self.name_format = name
-        self.name = re.sub(r'/\{.*$', '', name)
+        self.name = name
         self.methods = dict()
         log.debug(f"Created {self.__repr__()}")
 
@@ -155,6 +154,7 @@ class ScyllaApiCommand:
             method = ScyllaApiCommand.Method(kind, desc=operation_def["summary"])
             for param_def in operation_def["parameters"]:
                 method.add_option(ScyllaApiOption(param_def["name"],
+                    param_type=param_def.get("paramType", 'query'),
                     allowed_values=param_def.get("enum", []),
                     help=param_def["description"]))
             self.add_method(method)
