@@ -6,6 +6,7 @@ import logging
 import re
 import json
 from argparse import ArgumentParser
+import requests
 
 from rest.scylla_rest_client import ScyllaRestClient
 
@@ -94,17 +95,7 @@ class ScyllaApiOption:
         return f"option_name={self.name}, param_type={self.param_type}, allowed_values={self.allowed_values}, help={self.help}"
 
     def add_argument(self, parser:ArgumentParser):
-        params = {
-            'dest': self.name,
-            'help': self.help,
-        }
-        if self.param_type == 'path':
-            params['nargs'] = 1
-            if self.allowed_values:
-                params['choices'] = self.allowed_values
-            parser.add_argument(self.name, **params)
-        else:
-            parser.add_argument(f"--{self.name}", **params)
+        parser.add_argument(f"--{self.name}", dest=self.name, help=self.help, nargs=1, choices=self.allowed_values if self.allowed_values else None)
 
 class ScyllaApiCommand:
     class Method:
@@ -176,6 +167,37 @@ class ScyllaApiCommand:
             
             return s
 
+        def invoke(self, node_address:str, port:int, path_format:str, args:dict):
+            path_dict = dict()
+            params_dict = dict()
+            kind_str = self.kind_to_str[self.kind]
+
+            def get_value(opt_name:str):
+                value = args.pop(opt_name)
+                if type(value) is list:
+                    if len(value) == 1:
+                        value = value[0]
+                    else:
+                        value = ','.join(value)
+                return value
+
+            for opt in self.options.items():
+                if opt.param_type == 'path':
+                    try:
+                        path_dict[opt.name] = get_value(opt.name)
+                    except KeyError:
+                        print(f"{self.command_name} {kind_str}: missing required value path argument '{opt.name}'")
+                        return
+                else:
+                    try:
+                        path_dict[opt.name] = get_value(opt.name)
+                    except KeyError:
+                        pass
+            url = f"http://{node_address}:{port}/{path_format.format(**path_dict)}"
+            log.debug(f"request('{kind_str}', url={url}, params={params_dict})")
+            res = requests.request(kind_str, url=url, params=params_dict)
+            print(f"{res.text}")
+
     # init Command
     def __init__(self, module_name:str, command_name:str):
         self.module_name = module_name
@@ -221,7 +243,7 @@ class ScyllaApiCommand:
                     help=param_def["description"]))
             self.add_method(method)
 
-    def invoke(self, argv=[]):
+    def invoke(self, node_address:str, port:int, argv=[]):
         method_kind = None
         if len(argv) and argv[0] in self.Method.str_to_kind:
             method_kind = self.Method.str_to_kind[argv[0]]
@@ -257,8 +279,8 @@ class ScyllaApiCommand:
         except KeyError:
             print(f"{self.name}: {method_kind} method is not supported")
             return
-        args = method.parser.parse_args(argv)
-        log.debug(f"Parsed args={args}")
+        args = vars(method.parser.parse_args(argv))
+        method.invoke(node_address=node_address, port=port, path_format=self.name_format, args=args)
 
 class ScyllaApiModule:
     # init Module

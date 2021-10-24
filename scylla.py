@@ -179,7 +179,7 @@ if __name__ == '__main__':
                 print(f"Could not find command '{command_name}'")
                 exit(1)
 
-        command.invoke(args.command_args)
+        command.invoke(node_address=args.address, port=args.port, argv=args.command_args)
 
     log.debug('done')
     logging.shutdown()
