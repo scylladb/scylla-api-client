@@ -7,15 +7,12 @@ Usage::
 
 import argparse
 import logging
-import os
-import sys
-from typing import OrderedDict
 from rest.scylla_rest_client import ScyllaRestClient
 
 baselog = logging.getLogger('scylla.cli')
 log = logging.getLogger('scylla.cli.util')
 
-from scylla_cli import ScyllaApi, ScyllaApiModule, ScyllaApiCommand, ScyllaApiOption, OrderedDict
+from scylla_cli import ScyllaApi, ScyllaApiModule, ScyllaApiCommand, ScyllaApiOption
 
 def list_module(module:ScyllaApiModule):
     print(f"{module.name}:")
@@ -135,133 +132,43 @@ def load_api(node_address:str, port:int) -> ScyllaApi:
         scylla_api.add_module(module)
     return scylla_api
 
-# Mini command line arguments parser
-class ArgumentParser:
-    class Arg:
-        def __init__(self, names:list[str], dest:str, has_param=False, default=None, help:str=''):
-            self.names = names
-            self.dest = dest
-            self.has_param = has_param
-            self.default = default
-            self.help = help
-
-        def __repr__(self):
-            return f"Arg(names={self.names}, dest={self.dest}, has_param={self.has_param}, default={self.default}, help={self.help})"
-
-    def __init__(self, description:str):
-        self.description = description
-        self.progname = os.path.basename(sys.argv[0])
-        self.extra_args = []
-
-        self._args = OrderedDict()
-        self._by_name = dict[str, self.Arg]()
-        self._arg_values = dict()
-
-        self.add_argument(['-h', '--help'], dest='help', help='show this help message and exit')
-
-    def add_argument(self, names:list[str], dest:str, has_param=False, default=None, help:str=''):
-        if type(names) is str:
-            names = [names]
-        arg = self.Arg(names, dest=dest, has_param=has_param, default=default, help=help)
-        assert len(names)
-        self._args.insert(names[0], arg)
-        for n in names:
-            assert n not in self._by_name, f"arg '{n}' already added"
-            self._by_name[n] = arg
-        if default is not None:
-            self._arg_values[arg.dest] = arg.default
-        elif not has_param:
-            self._arg_values[arg.dest] = False
-
-    # print help message and exit
-    def usage(self):
-        s = f"Usage: {self.progname}:"
-        for arg in self._args.items():
-            arg_param = f" <{arg.dest.upper()}>" if arg.has_param else ''
-            s += f" [{arg.names[0]}{arg_param}]"
-        s += f"\n\n{self.description}\n\n"
-        s += "Optional arguments:\n"
-        for arg in self._args.items():
-            arg_name = arg.names[0] if len(arg.names) == 1 else '|'.join(arg.names)
-            arg_param = f" <{arg.dest.upper()}>" if arg.has_param else ''
-            justify = 21
-            arg_pfx = f"  {arg_name}{arg_param}".ljust(justify)
-            s += arg_pfx
-            if arg.help:
-                if len(arg_pfx) > justify:
-                    s += f"\n{''.ljust(justify+1)}"
-                else:
-                    s += ' '
-                s += arg.help
-            s += '\n'
-        print(f"{s}")
-        exit
-
-    def parse_args(self, argv:list[str]=None):
-        if not argv:
-            argv = sys.argv
-        argc = 0
-        if os.path.basename(argv[0]) == self.progname:
-            argc += 1
-        while argc < len(argv):
-            opt = argv[argc]
-            if opt in self._by_name:
-                argc += 1
-                arg = self._by_name[opt]
-                if arg.has_param:
-                    if argc < len(argv):
-                        param = argv[argc]
-                        argc += 1
-                    else:
-                        print(f"Missing {arg.dest.upper()} parameter for option '{opt}'\n\n")
-                        self.usage()
-                    self._arg_values[arg.dest] = param
-                else:
-                    self._arg_values[arg.dest] = True
-            else:
-                self.extra_args = argv[argc:]
-                break
-        if self.get('help'):
-            self.usage()
-
-    def get(self, arg:str):
-        try:
-            return self._arg_values[arg]
-        except KeyError:
-            return None
-
 if __name__ == '__main__':
-    parser = ArgumentParser(description='Scylla api command line interface.')
-    parser.add_argument(['-a', '--address'], dest='address', has_param=True, default=ScyllaApi.default_address,
+    parser = argparse.ArgumentParser(description='Scylla api command line interface.')
+    parser.add_argument('-a', '--address', dest='address', type=str, default=ScyllaApi.default_address,
                         help=f"IP address of server node (default: {ScyllaApi.default_address})")
-    parser.add_argument(['-p', '--port'], dest='port', has_param=True, default=ScyllaApi.default_port,
+    parser.add_argument('-p', '--port', dest='port', type=int, default=ScyllaApi.default_port,
                         help=f"api port (default: {ScyllaApi.default_port})")
 
-    parser.add_argument(['-l', '--list'], dest='list_api', help=f"List all API commands")
-    parser.add_argument('--list-modules', dest='list_modules', help=f"List all API modules")
-    parser.add_argument('--list-module-commands', dest='list_module_commands', has_param=True,
+    parser.add_argument('-l', '--list', dest='list_api', action='store_const', const=True, default=False,
+                        help=f"List all API commands")
+    parser.add_argument('--list-modules', dest='list_modules', action='store_const', const=True, default=False,
+                        help=f"List all API modules")
+    parser.add_argument('--list-module-commands', dest='list_module_commands', type=str,
                         help=f"List all commands in an API module")
 
-    parser.add_argument(['-d', '--debug'], dest='debug', help=f"Turn on debug logging (default=False)")
-    parser.add_argument(['-t', '--test'], dest='test', help=f"Run test (default=False)")
+    parser.add_argument('-d', '--debug', dest='debug', action='store_const', const=True, default=False,
+                        help=f"Turn on debug logging (default=False)")
+    parser.add_argument('-t', '--test', dest='test', action='store_const', const=True, default=False,
+                        help=f"Run test (default=False)")
 
-    parser.parse_args()
+    args = argparse.Namespace()
+    parser.parse_args(namespace=args)
 
     logging.basicConfig(format='%(asctime)s,%(msecs)03d %(process)-7d %(name)-25s %(levelname)-8s | %(message)s')
-    baselog.setLevel(logging.DEBUG if parser.get('debug') else logging.INFO)
+    baselog.setLevel(logging.DEBUG if args.debug else logging.INFO)
 
     log.debug('Starting')
 
-    if parser.get('test'):
-        scylla_api = test(parser.get('address'), parser.get('port'))
+    if args.test:
+        scylla_api = test(args.address, args.port)
     else:
         # for now
-        scylla_api = load_api(parser.get('address'), parser.get('port'))
+        scylla_api = load_api(args.address, args.port)
 
     # FIXME: load only needed module(s)
 
-    if parser.get('list_api') or parser.get('list_modules') or parser.get('list_module_commands'):
-        list_api(scylla_api, parser.get('list_modules'), parser.get('list_module_commands'))
+    if args.list_api or args.list_modules or args.list_module_commands:
+        list_api(scylla_api, args.list_modules, args.list_module_commands)
 
     log.debug('done')
     logging.shutdown()
