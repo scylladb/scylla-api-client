@@ -225,6 +225,7 @@ class ScyllaApiCommand:
         method_kind = None
         if len(argv) and argv[0] in self.Method.str_to_kind:
             method_kind = self.Method.str_to_kind[argv[0]]
+            argv = argv[1:]
         if method_kind is None:
             if len(self.methods) == 1:
                 method_kind = list(self.methods.keys())[0]
