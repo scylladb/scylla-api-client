@@ -120,7 +120,8 @@ class ScyllaApiCommand:
 
     # init Command
     def __init__(self, name:str):
-        self.name = name
+        self.name_format = name
+        self.name = re.sub(r'/\{.*$', '', name)
         self.methods = dict()
         log.debug(f"Created {self.__repr__()}")
 
@@ -141,29 +142,22 @@ class ScyllaApiCommand:
     def load_json(self, command_json:dict):
         log.debug(f"Loading: {json.dumps(command_json, indent=4)}")
         for operation_def in command_json["operations"]:
-            operation = None
             if operation_def["method"].upper() == "GET":
-                operation = ScyllaApiCommand.Method(ScyllaApiCommand.Method.GET,
-                                                    operation_def["summary"])
+                kind = ScyllaApiCommand.Method.GET
             elif operation_def["method"].upper() == "POST":
-                operation = ScyllaApiCommand.Method(ScyllaApiCommand.Method.POST,
-                                                    operation_def["summary"])
-                for param_def in operation_def["parameters"]:
-                    operation.add_option(ScyllaApiOption(param_def["name"],
-                                            allowed_values=param_def.get("enum", []),
-                                            help=param_def["description"]))
+                kind = ScyllaApiCommand.Method.POST
             elif operation_def["method"].upper() == "DELETE":
-                operation = ScyllaApiCommand.Method(ScyllaApiCommand.Method.DELETE,
-                                                    operation_def["summary"])
-                for param_def in operation_def["parameters"]:
-                    operation.add_option(ScyllaApiOption(param_def["name"],
-                                            allowed_values=param_def.get("enum", []),
-                                            help=param_def["description"]))
-
-            if operation:
-                self.add_method(operation)
+                kind = ScyllaApiCommand.Method.DELETE
             else:
                 log.warn(f"Operation not supported yet: {json.dumps(operation_def, indent=4)}")
+                continue
+
+            method = ScyllaApiCommand.Method(kind, desc=operation_def["summary"])
+            for param_def in operation_def["parameters"]:
+                method.add_option(ScyllaApiOption(param_def["name"],
+                    allowed_values=param_def.get("enum", []),
+                    help=param_def["description"]))
+            self.add_method(method)
 
 class ScyllaApiModule:
     # init Module
