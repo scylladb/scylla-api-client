@@ -45,7 +45,7 @@ def list_api(scylla_api:ScyllaApi, list_modules:bool, list_module_commands:str):
 def test(node_address:str, port:int) -> ScyllaApi:
     log.debug('Starting test')
 
-    test_command = ScyllaApiCommand('test_command')
+    test_command = ScyllaApiCommand(module_name='test_module', command_name='test_command')
     get_method = ScyllaApiCommand.Method(kind=ScyllaApiCommand.Method.GET, command_name='test_command')
     get_method.add_option(ScyllaApiOption('test_positional_get_option_1', param_type='path', help='help for test_positional_get_option_1'))
     get_method.add_option(ScyllaApiOption('test_get_option_2', help='help for test_get_option_2'))
@@ -65,7 +65,7 @@ def test(node_address:str, port:int) -> ScyllaApi:
     test_module.add_command(test_command)
     assert test_module.commands.count() == 1, f"Expect len to be 1, but got {test_module.commands.count()}"
 
-    test_command_1 = ScyllaApiCommand('test_command_1')
+    test_command_1 = ScyllaApiCommand(module_name='test_module', command_name='test_command_1')
     get_method = ScyllaApiCommand.Method(kind=ScyllaApiCommand.Method.GET, command_name='test_command_1')
     get_method.add_option(ScyllaApiOption('test_positional_get_option_1_1', param_type='path', help='help for test_positional_get_option_1_1'))
     get_method.add_option(ScyllaApiOption('test_get_option_1_2', help='help for test_get_option_1_2'))

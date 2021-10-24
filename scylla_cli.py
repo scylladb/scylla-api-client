@@ -177,9 +177,12 @@ class ScyllaApiCommand:
             return s
 
     # init Command
-    def __init__(self, name:str):
-        self.name = name
-        self.name_format = name
+    def __init__(self, module_name:str, command_name:str):
+        self.module_name = module_name
+        self.name = command_name
+        # name format ise used for generting the command url
+        # it may include positional path arguments like "my_module/my_command/{param}"
+        self.name_format = f"{module_name}/{command_name}"
         re.sub(r'/\{.*$', '', self.name)
         self.methods = dict()
         log.debug(f"Created {self.__repr__()}")
@@ -321,7 +324,7 @@ class ScyllaApi:
                 command_path = command_json['path'].strip(' /')
                 if command_path.startswith(module_path):
                     command_path = command_path[len(module_path)+1:]
-                command = ScyllaApiCommand(command_path)
+                command = ScyllaApiCommand(module_name=module_path, command_name=command_path)
                 command.load_json(command_json)
                 module.add_command(command)
             self.add_module(module)
