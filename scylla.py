@@ -7,7 +7,6 @@ Usage::
 
 import argparse
 import logging
-from rest.scylla_rest_client import ScyllaRestClient
 
 baselog = logging.getLogger('scylla.cli')
 log = logging.getLogger('scylla.cli.util')
@@ -46,29 +45,29 @@ def list_api(scylla_api:ScyllaApi, list_modules:bool, list_module_commands:str):
 def test(node_address:str, port:int) -> ScyllaApi:
     log.debug('Starting test')
 
-    test_command = ScyllaApiCommand('test_command')
-    get_method = ScyllaApiCommand.Method(ScyllaApiCommand.Method.GET)
-    get_method.add_option(ScyllaApiOption('test_positional_get_option_1', positional=True, help='help for test_positional_get_option_1'))
+    test_command = ScyllaApiCommand(module_name='test_module', command_name='test_command')
+    get_method = ScyllaApiCommand.Method(kind=ScyllaApiCommand.Method.GET, command_name='test_command')
+    get_method.add_option(ScyllaApiOption('test_positional_get_option_1', param_type='path', help='help for test_positional_get_option_1'))
     get_method.add_option(ScyllaApiOption('test_get_option_2', help='help for test_get_option_2'))
     test_command.add_method(get_method)
 
-    post_method = ScyllaApiCommand.Method(ScyllaApiCommand.Method.POST)
+    post_method = ScyllaApiCommand.Method(kind=ScyllaApiCommand.Method.POST, command_name='test_command')
     post_method.add_option(ScyllaApiOption('test_post_option_1', allowed_values=['hello', 'world'], help='help for test_post_option_1'))
     test_command.add_method(post_method)
 
     log.debug(f"test_command={test_command}")
 
-    assert test_command.methods[ScyllaApiCommand.Method.GET].options[0].name == 'test_positional_get_option_1'
-    assert test_command.methods[ScyllaApiCommand.Method.GET].options[1].name == 'test_get_option_2'
-    assert test_command.methods[ScyllaApiCommand.Method.POST].options[0].name == 'test_post_option_1'
+    assert test_command.methods[ScyllaApiCommand.Method.GET].options[0].name == 'test_positional_get_option_1', f"{test_command.methods[ScyllaApiCommand.Method.GET].options[0].name} != 'test_positional_get_option_1'"
+    assert test_command.methods[ScyllaApiCommand.Method.GET].options[1].name == 'test_get_option_2', f"{test_command.methods[ScyllaApiCommand.Method.GET].options[1].name} != 'test_get_option_2'"
+    assert test_command.methods[ScyllaApiCommand.Method.POST].options[0].name == 'test_post_option_1', f"{test_command.methods[ScyllaApiCommand.Method.POST].options[0].name} == 'test_post_option_1'"
 
     test_module = ScyllaApiModule('test_module')
     test_module.add_command(test_command)
     assert test_module.commands.count() == 1, f"Expect len to be 1, but got {test_module.commands.count()}"
 
-    test_command_1 = ScyllaApiCommand('test_command_1')
-    get_method = ScyllaApiCommand.Method(ScyllaApiCommand.Method.GET)
-    get_method.add_option(ScyllaApiOption('test_positional_get_option_1_1', positional=True, help='help for test_positional_get_option_1_1'))
+    test_command_1 = ScyllaApiCommand(module_name='test_module', command_name='test_command_1')
+    get_method = ScyllaApiCommand.Method(kind=ScyllaApiCommand.Method.GET, command_name='test_command_1')
+    get_method.add_option(ScyllaApiOption('test_positional_get_option_1_1', param_type='path', help='help for test_positional_get_option_1_1'))
     get_method.add_option(ScyllaApiOption('test_get_option_1_2', help='help for test_get_option_1_2'))
     test_command_1.add_method(get_method)
     test_module.add_command(test_command_1)
@@ -77,7 +76,7 @@ def test(node_address:str, port:int) -> ScyllaApi:
     assert test_module.commands[0] == test_command
     assert test_module.commands[1] == test_command_1
 
-    test_api = ScyllaApi(node_address=node_address, port=port)
+    test_api = ScyllaApi()
     test_api.add_module(test_module)
 
     test_module_1 = ScyllaApiModule('test_module_1')
@@ -100,32 +99,8 @@ def test(node_address:str, port:int) -> ScyllaApi:
 
 # FIXME: better name
 def load_api(node_address:str, port:int) -> ScyllaApi:
-    client = ScyllaRestClient()
-    scylla_api = ScyllaApi(node_address=node_address, port=port)
-
-    # FIXME: handle service down, assert minimum version
-    top_json = client.get_raw_api_json()
-    for module_def in top_json["apis"]:
-        # FIXME: handle service down, errors
-        module_json = client.get_raw_api_json(f"{module_def['path']}/")
-        module = ScyllaApiModule(module_def['path'][1:], module_def['description'])
-        for command_json in module_json["apis"]:
-            command = ScyllaApiCommand(command_json['path'][1:])
-            for operation_def in command_json["operations"]:
-                if operation_def["method"].upper() == "GET":
-                    operation = ScyllaApiCommand.Method(ScyllaApiCommand.Method.GET,
-                                                        operation_def["summary"])
-                elif operation_def["method"].upper() == "POST":
-                    operation = ScyllaApiCommand.Method(ScyllaApiCommand.Method.POST,
-                                                        operation_def["summary"])
-                    for param_def in operation_def["parameters"]:
-                        operation.add_option(ScyllaApiOption(param_def["name"],
-                                             allowed_values=param_def.get("enum", []),
-                                             help=param_def["description"]))
-                # FIXME: handle DELETE
-                command.add_method(operation)
-            module.add_command(command)
-        scylla_api.add_module(module)
+    scylla_api = ScyllaApi()
+    scylla_api.load(node_address, port)
     return scylla_api
 
 if __name__ == '__main__':
@@ -141,6 +116,11 @@ if __name__ == '__main__':
                         help=f"List all API modules")
     parser.add_argument('--list-module-commands', dest='list_module_commands', type=str,
                         help=f"List all commands in an API module")
+
+    parser.add_argument('command', nargs='?',
+                        help=f"API command to invoke. module/command can be use to specify a command in a module")
+    parser.add_argument('command_args', nargs='*',
+                        help=f"Optional arguments for the API command. Use `command -h` to print the command help message and exit")
 
     parser.add_argument('-d', '--debug', dest='debug', action='store_const', const=True, default=False,
                         help=f"Turn on debug logging (default=False)")
@@ -165,6 +145,40 @@ if __name__ == '__main__':
 
     if args.list_api or args.list_modules or args.list_module_commands:
         list_api(scylla_api, args.list_modules, args.list_module_commands)
+        exit
+
+    if args.command:
+        if '/' in args.command:
+            module_name, command_name = args.command.split('/')
+            try:
+                module = scylla_api.modules[module_name]
+            except KeyError:
+                print(f"Could not find module '{module_name}'")
+                exit(1)
+            try:
+                command = module.commands[command_name]
+            except KeyError:
+                print(f"Could not find command '{command_name}' in module '{module_name}'")
+                exit(1)
+        else:
+            command_name = args.command
+            module = None
+            command = None
+            for m in scylla_api.modules.items():
+                try:
+                    command = m.commands[command_name]
+                    if not module:
+                        module = m
+                    else:
+                        print(f"Command '{command_name}' exists in multiple modules. Specify 'module/command' to uniquely identify the command.")
+                        exit(1)
+                except KeyError:
+                    pass
+            if not command:
+                print(f"Could not find command '{command_name}'")
+                exit(1)
+
+        command.invoke(args.command_args)
 
     log.debug('done')
     logging.shutdown()
