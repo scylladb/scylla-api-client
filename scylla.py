@@ -108,9 +108,13 @@ def load_api(node_address:str, port:int) -> ScyllaApi:
     for module_def in top_json["apis"]:
         # FIXME: handle service down, errors
         module_json = client.get_raw_api_json(f"{module_def['path']}/")
-        module = ScyllaApiModule(module_def['path'][1:], module_def['description'])
+        module_path = module_def['path'].strip(' /')
+        module = ScyllaApiModule(module_path, module_def['description'])
         for command_json in module_json["apis"]:
-            command = ScyllaApiCommand(command_json['path'][1:])
+            command_path = command_json['path'].strip(' /')
+            if command_path.startswith(module_path):
+                command_path = command_path[len(module_path)+1:]
+            command = ScyllaApiCommand(command_path)
             for operation_def in command_json["operations"]:
                 if operation_def["method"].upper() == "GET":
                     operation = ScyllaApiCommand.Method(ScyllaApiCommand.Method.GET,
