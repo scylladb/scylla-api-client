@@ -243,7 +243,7 @@ class ScyllaApiCommand:
             kind_strings.append(kind_str)
             if not m.parser:
                 m.generate_parser()
-            if print_help and method_kind is None or method_kind == kind:
+            if print_help and (method_kind is None or method_kind == kind):
                 if len(kind_strings) > 1:
                     print('---')
                 print(f"{m.get_help()}")
