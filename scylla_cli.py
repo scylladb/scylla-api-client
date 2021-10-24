@@ -81,6 +81,7 @@ class ScyllaApiOption:
         self.positional = positional
         self.allowed_values = allowed_values
         self.help = help
+        log.debug(f"Created {self.__repr__()}")
 
     def __repr__(self):
         return f"ApiCommandOption(name={self.name}, positional={self.positional}, allowed_values={self.allowed_values}, help={self.help})"
@@ -98,6 +99,7 @@ class ScyllaApiCommand:
             self.kind = kind
             self.desc = desc
             self.options = options or OrderedDict()
+            log.debug(f"Created {self.__repr__()}")
 
         def __repr__(self):
             return f"Method(kind={self.kind}, desc={self.desc}, options={self.options})"
@@ -116,6 +118,7 @@ class ScyllaApiCommand:
     def __init__(self, name:str):
         self.name = name
         self.methods = dict()
+        log.debug(f"Created {self.__repr__()}")
 
     def __repr__(self):
         return f"ApiCommand(name={self.name}, methods={self.methods})"
@@ -137,6 +140,7 @@ class ScyllaApiModule:
         self.desc = desc
         self.name = name
         self.commands = commands or OrderedDict()
+        log.debug(f"Created {self.__repr__()}")
 
     def __repr__(self):
         return f"ApiModule(name={self.name}, desc={self.desc}, commands={self.commands})"
