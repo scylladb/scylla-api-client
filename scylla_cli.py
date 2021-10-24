@@ -81,18 +81,20 @@ class OrderedDict:
 
 class ScyllaApiOption:
     # init Command
-    def __init__(self, name:str, param_type:str='query', allowed_values=[], help:str=''):
+    def __init__(self, name:str, required:bool = False, param_type:str='query',
+                 allowed_values=[], help:str=''):
         self.name = name
+        self.required = required
         self.param_type = param_type
         self.allowed_values = allowed_values
         self.help = help
         log.debug(f"Created {self.__repr__()}")
 
     def __repr__(self):
-        return f"ApiCommandOption(name={self.name}, param_type={self.param_type}, allowed_values={self.allowed_values}, help={self.help})"
+        return f"ApiCommandOption(name={self.name}, required={self.required}, param_type={self.param_type}, allowed_values={self.allowed_values}, help={self.help})"
 
     def __str__(self):
-        return f"option_name={self.name}, param_type={self.param_type}, allowed_values={self.allowed_values}, help={self.help}"
+        return f"option_name={self.name}, required={self.required}, param_type={self.param_type}, allowed_values={self.allowed_values}, help={self.help}"
 
     def add_argument(self, parser:ArgumentParser):
         parser.add_argument(f"--{self.name}", dest=self.name, help=self.help, nargs=1, choices=self.allowed_values if self.allowed_values else None)
@@ -141,8 +143,8 @@ class ScyllaApiCommand:
             positional_help = ''
             query_help = ''
 
-            def opt_help(name:str, param:str='', help:str='', justify=21):
-                pfx = f"  {name} {param}"
+            def opt_help(name:str, required:bool, param:str='', help:str='', justify=21):
+                pfx = f"  {name} {param} {'(required)' if required else ''}"
                 s = pfx.ljust(justify)
                 if len(pfx) >= justify:
                     s += f"\n{''.ljust(justify)}"
@@ -152,12 +154,13 @@ class ScyllaApiCommand:
             for opt in self.options.items():
                 if opt.param_type == 'path':
                     s += f" {opt.name}"
-                    oh = opt_help(opt.name, param='', help=opt.help)
+                    oh = opt_help(opt.name, required=opt.required, param='', help=opt.help)
                     positional_help += f"\n{oh}"
             for opt in self.options.items():
                 if opt.param_type == 'query':
                     s += f" --{opt.name} {opt.name.upper()}"
-                    oh = opt_help(f"--{opt.name}", param=f"{opt.name.upper()}", help=opt.help)
+                    oh = opt_help(f"--{opt.name}", required=opt.required,
+                                  param=f"{opt.name.upper()}", help=opt.help)
                     query_help += f"\n{oh}"
 
             if positional_help:
@@ -238,6 +241,7 @@ class ScyllaApiCommand:
             method = ScyllaApiCommand.Method(kind=kind, desc=operation_def["summary"], command_name=self.name)
             for param_def in operation_def["parameters"]:
                 method.add_option(ScyllaApiOption(param_def["name"],
+                    required=param_def.get("required", False),
                     param_type=param_def.get("paramType", 'query'),
                     allowed_values=param_def.get("enum", []),
                     help=param_def["description"]))
@@ -280,6 +284,10 @@ class ScyllaApiCommand:
             print(f"{self.name}: {method_kind} method is not supported")
             return
         args = vars(method.parser.parse_args(argv))
+        # FIXME: check properly option format (e.g.)
+        provided_options = set(args.keys())
+        required_options = set(opt.name for opt in method.options.items() if opt.required)
+        assert(required_options.issubset(provided_options))
         method.invoke(node_address=node_address, port=port, path_format=self.name_format, args=args)
 
 class ScyllaApiModule:
