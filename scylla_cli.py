@@ -161,6 +161,9 @@ class ScyllaApiCommand:
                     help=param_def["description"]))
             self.add_method(method)
 
+    def invoke(self, method_kind:str='GET', argv=[]):
+        log.debug(f"Invoking {self.name} {method_kind} {argv}")
+
 class ScyllaApiModule:
     # init Module
     def __init__(self, name:str, desc:str='', commands:OrderedDict=None):

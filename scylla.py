@@ -117,6 +117,14 @@ if __name__ == '__main__':
     parser.add_argument('--list-module-commands', dest='list_module_commands', type=str,
                         help=f"List all commands in an API module")
 
+    method_choices = ['GET', 'POST', 'DELETE']
+    parser.add_argument('-X', '--request', dest='method', type=str, choices=method_choices, default='',
+                        help=f"Specify the request method")
+    parser.add_argument('command', nargs='?',
+                        help=f"API command to invoke. module/command can be use to specify a command in a module")
+    parser.add_argument('command_args', nargs='*',
+                        help=f"Optional arguments for the API command. Use `command -h` to print the command help message and exit")
+
     parser.add_argument('-d', '--debug', dest='debug', action='store_const', const=True, default=False,
                         help=f"Turn on debug logging (default=False)")
     parser.add_argument('-t', '--test', dest='test', action='store_const', const=True, default=False,
@@ -140,6 +148,40 @@ if __name__ == '__main__':
 
     if args.list_api or args.list_modules or args.list_module_commands:
         list_api(scylla_api, args.list_modules, args.list_module_commands)
+        exit
+
+    if args.command:
+        if '/' in args.command:
+            module_name, command_name = args.command.split('/')
+            try:
+                module = scylla_api.modules[module_name]
+            except KeyError:
+                print(f"Could not find module '{module_name}'")
+                exit(1)
+            try:
+                command = module.commands[command_name]
+            except KeyError:
+                print(f"Could not find command '{command_name}' in module '{module_name}'")
+                exit(1)
+        else:
+            command_name = args.command
+            module = None
+            command = None
+            for m in scylla_api.modules.items():
+                try:
+                    command = m.commands[command_name]
+                    if not module:
+                        module = m
+                    else:
+                        print(f"Command '{command_name}' exists in multiple modules. Specify 'module/command' to uniquely identify the command.")
+                        exit(1)
+                except KeyError:
+                    pass
+            if not command:
+                print(f"Could not find command '{command_name}'")
+                exit(1)
+
+        command.invoke(args.method, args.command_args)
 
     log.debug('done')
     logging.shutdown()
