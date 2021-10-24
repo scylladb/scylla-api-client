@@ -140,11 +140,11 @@ class ScyllaApiCommand:
 
         def get_help(self):
             s = f"{self.kind_to_str[self.kind]} {self.command_name}"
-            positional_help = ''
-            query_help = ''
+            required_help = ''
+            optional_help = ''
 
-            def opt_help(name:str, required:bool, param:str='', help:str='', justify=21):
-                pfx = f"  {name} {param} {'(required)' if required else ''}"
+            def opt_help(name:str, param:str='', help:str='', justify=21):
+                pfx = f"  {name} {param}"
                 s = pfx.ljust(justify)
                 if len(pfx) >= justify:
                     s += f"\n{''.ljust(justify)}"
@@ -152,21 +152,20 @@ class ScyllaApiCommand:
                 return s
 
             for opt in self.options.items():
-                if opt.param_type == 'path':
-                    s += f" {opt.name}"
-                    oh = opt_help(opt.name, required=opt.required, param='', help=opt.help)
-                    positional_help += f"\n{oh}"
-            for opt in self.options.items():
-                if opt.param_type == 'query':
+                if opt.required:
                     s += f" --{opt.name} {opt.name.upper()}"
-                    oh = opt_help(f"--{opt.name}", required=opt.required,
-                                  param=f"{opt.name.upper()}", help=opt.help)
-                    query_help += f"\n{oh}"
+                    oh = opt_help(f"--{opt.name}", param=f"{opt.name.upper()}", help=opt.help)
+                    required_help += f"\n{oh}"
+            for opt in self.options.items():
+                if not opt.required:
+                    s += f" [--{opt.name} {opt.name.upper()}]"
+                    oh = opt_help(f"--{opt.name}", param=f"{opt.name.upper()}", help=opt.help)
+                    optional_help += f"\n{oh}"
 
-            if positional_help:
-                s += f"\n\nPositional arguments:{positional_help}"
-            if query_help:
-                s += f"\n\nQuery arguments:{query_help}"
+            if required_help:
+                s += f"\n\nRequired arguments:{required_help}"
+            if optional_help:
+                s += f"\n\nOptional arguments:{optional_help}"
             
             return s
 
