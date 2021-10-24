@@ -133,15 +133,16 @@ class ScyllaApiCommand:
 
 class ScyllaApiModule:
     # init Module
-    def __init__(self, name:str, commands:OrderedDict=None):
+    def __init__(self, name:str, desc:str='', commands:OrderedDict=None):
+        self.desc = desc
         self.name = name
         self.commands = commands or OrderedDict()
 
     def __repr__(self):
-        return f"ApiModule(name={self.name} commands={self.commands})"
+        return f"ApiModule(name={self.name}, desc={self.desc}, commands={self.commands})"
 
     def __str__(self):
-        s = f"{self.name}:"
+        s = f"{self.name}: {self.desc}"
         for command_name in self.commands.keys():
             command = self.commands[command_name]
             if s:
