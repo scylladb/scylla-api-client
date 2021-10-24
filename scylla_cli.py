@@ -131,9 +131,9 @@ class ScyllaApiCommand:
 
         def __str__(self):
             s = f"{self.kind_to_str[self.kind]}: {self.desc}"
-            for opt_name in self.options.keys():
-                opt = self.options[opt_name]
-                s += f"\n        {opt}"
+            #for opt_name in self.options.keys():
+            #    opt = self.options[opt_name]
+            #    s += f"\n        {opt}"
             return s
 
         def add_option(self, option:ScyllaApiOption):
@@ -191,11 +191,11 @@ class ScyllaApiCommand:
         return f"ApiCommand(name={self.name}, methods={self.methods})"
 
     def __str__(self):
-        s = f"{self.name}:"
+        s = f"{self.module_name}/{self.name}:"
         for _, method in self.methods.items():
             method_str = f"{method}"
-            re.sub('\n', '\n      ', method_str)
-            s += f"\n      {method_str}"
+            re.sub('\n', '\n    ', method_str)
+            s += f"\n  {method_str}"
         return s
 
     def add_method(self, method:Method):

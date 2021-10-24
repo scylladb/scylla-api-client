@@ -14,11 +14,10 @@ log = logging.getLogger('scylla.cli.util')
 from scylla_cli import ScyllaApi, ScyllaApiModule, ScyllaApiCommand, ScyllaApiOption
 
 def list_module(module:ScyllaApiModule):
-    print(f"{module.name}:")
     for command_name in module.commands.keys():
         # FIXME, for now dump the object
         # need to pretty print it
-        print(f"{'':4}{module.commands[command_name]}")
+        print(f"{module.commands[command_name]}")
 
 def list_api(scylla_api:ScyllaApi, list_modules:bool, list_module_commands:str):
     if list_modules:
@@ -37,10 +36,10 @@ def list_api(scylla_api:ScyllaApi, list_modules:bool, list_module_commands:str):
 
     first = True
     for module_name in scylla_api.modules.keys():
-        list_module(scylla_api.modules[module_name])
-        if first:
+        if not first:
             print('')
-            first = False
+        first = False
+        list_module(scylla_api.modules[module_name])
 
 def test(node_address:str, port:int) -> ScyllaApi:
     log.debug('Starting test')
