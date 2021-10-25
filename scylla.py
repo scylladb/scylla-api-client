@@ -5,6 +5,7 @@ Usage::
     ./scylla.py --help [command [args...]]
 """
 
+from re import S
 from simple_argparser import ArgumentParser
 import logging
 import sys
@@ -14,34 +15,42 @@ log = logging.getLogger('scylla.cli.util')
 
 from scylla_cli import ScyllaApi, ScyllaApiModule, ScyllaApiCommand, ScyllaApiOption
 
-def list_module(module:ScyllaApiModule):
-    for command_name in module.commands.keys():
-        # FIXME, for now dump the object
-        # need to pretty print it
-        print(f"{module.commands[command_name]}")
+class Lister:
+    def __init__(self, scylla_api:ScyllaApi):
+        self.scylla_api = scylla_api
 
-def list_api(scylla_api:ScyllaApi, list_modules:bool, list_module_commands:str):
-    if list_modules:
-        if list_module_commands:
-            raise RuntimeError('--list-modules option cannot be used along with --list-module-commands')
-        for name in scylla_api.modules.keys():
+    def list_modules(self):
+        print("Available modules:\n")
+        for name in self.scylla_api.modules.keys():
             print(f"{name}")
-        return
 
-    if list_module_commands:
-        try:
-            list_module(scylla_api.modules[list_module_commands])
-        except KeyError:
-            print(f"Error: module '{list_module_commands}' not found")
-        return
+    def list_module_commands(self, module:ScyllaApiModule):
+        for command_name in module.commands.keys():
+            # FIXME, for now dump the object
+            # need to pretty print it
+            print(f"{module.commands[command_name]}")
 
-    first = True
-    for module_name in scylla_api.modules.keys():
-        if not first:
-            print('')
-        first = False
-        print(f'---- {module_name} ----')
-        list_module(scylla_api.modules[module_name])
+    def list_api(self, list_modules:bool=False, list_module_commands:str=''):
+        if list_modules:
+            if list_module_commands:
+                raise RuntimeError('--list-modules option cannot be used along with --list-module-commands')
+            self.list_modules()
+            return
+
+        if list_module_commands:
+            try:
+                self.list_module_commands(scylla_api.modules[list_module_commands])
+            except KeyError:
+                print(f"Error: module '{list_module_commands}' not found")
+            return
+
+        first = True
+        for module_name in scylla_api.modules.keys():
+            if not first:
+                print('')
+            first = False
+            print(f'---- {module_name} ----')
+            self.list_module_commands(scylla_api.modules[module_name])
 
 def test(node_address:str, port:int) -> ScyllaApi:
     log.debug('Starting test')
@@ -106,7 +115,7 @@ def load_api(node_address:str, port:str) -> ScyllaApi:
 
 
 if __name__ == '__main__':
-    extra_args_help=f"[module/]command [{'|'.join(ScyllaApiCommand.Method.kind_to_str)}] [args...]"
+    extra_args_help=f"[module] command [{'|'.join(ScyllaApiCommand.Method.kind_to_str)}] [args...]"
     parser = ArgumentParser(description='Scylla api command line interface.', extra_args_help=extra_args_help)
     parser.add_argument(['-a', '--address'], dest='address', has_param=True,
                         help=f"IP address of server node (default: {ScyllaApi.DEFAULT_HOST})")
@@ -114,8 +123,8 @@ if __name__ == '__main__':
                         help=f"api port (default: {ScyllaApi.DEFAULT_PORT})")
 
     parser.add_argument(['-l', '--list'], dest='list_api', help=f"List all API commands")
-    parser.add_argument('--list-modules', dest='list_modules', help=f"List all API modules")
-    parser.add_argument('--list-module-commands', dest='list_module_commands', has_param=True,
+    parser.add_argument(['-lm', '--list-modules'], dest='list_modules', help=f"List all API modules")
+    parser.add_argument(['-lmc', '--list-module-commands'], dest='list_module_commands', has_param=True,
                         help=f"List all commands in an API module")
 
     parser.add_argument(['-d', '--debug'], dest='debug', help=f"Turn on debug logging (default=False)")
@@ -141,12 +150,34 @@ if __name__ == '__main__':
 
     # FIXME: load only needed module(s)
 
+    lister = Lister(scylla_api)
     if parser.get('list_api') or parser.get('list_modules') or parser.get('list_module_commands'):
-        list_api(scylla_api, parser.get('list_modules'), parser.get('list_module_commands'))
+        lister.list_api(parser.get('list_modules'), parser.get('list_module_commands'))
         exit()
 
-    if parser.extra_args:
-        command_name = parser.extra_args[0].strip(' /')
+    if not parser.extra_args:
+        parser.usage(do_exit=False)
+        lister.list_modules()
+        exit()
+
+    argv = parser.extra_args
+    if argv[0].strip(' /') in scylla_api.modules.keys():
+        module_name = argv[0].strip(' /')
+        argv = argv[1:]
+        module = scylla_api.modules[module_name]
+        if not argv or argv[0] in ['-h', '--help']:
+            lister.list_module_commands(module)
+            exit()
+        command_name = argv[0].strip(' /')
+        argv = argv[1:]
+        try:
+            command = module.commands[command_name]
+        except KeyError:
+            print(f"Could not find command '{command_name}' in module '{module_name}'")
+            exit(1)
+    else:
+        command_name = argv[0].strip(' /')
+        argv = argv[1:]
         sep = command_name.find('/')
         if sep > 0:
             module_name = command_name[:sep]
@@ -178,8 +209,7 @@ if __name__ == '__main__':
                 print(f"Could not find command '{command_name}'")
                 exit(1)
 
-        argv = parser.extra_args[1:]
-        command.invoke(node_address=node_address, port=port, argv=argv)
+    command.invoke(node_address=node_address, port=port, argv=argv)
 
     log.debug('done')
     logging.shutdown()

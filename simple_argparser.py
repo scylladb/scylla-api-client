@@ -46,7 +46,7 @@ class ArgumentParser:
             self._by_name[n] = arg
 
     # print help message and exit
-    def usage(self):
+    def usage(self, do_exit:bool=True):
         s = f"Usage: {self.progname}:"
         for arg in self._raw_args.items():
             arg_param = f" <{arg.dest.upper()}>" if arg.has_param else ''
@@ -69,7 +69,8 @@ class ArgumentParser:
                 s += arg.help
             s += '\n'
         print(f"{s}")
-        exit()
+        if do_exit:
+            exit()
 
     def parse_args(self, argv:list[str]=None):
         if not argv:
