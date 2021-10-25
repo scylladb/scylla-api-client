@@ -7,6 +7,7 @@ Usage::
 
 import argparse
 import logging
+import sys
 
 baselog = logging.getLogger('scylla.cli')
 log = logging.getLogger('scylla.cli.util')
@@ -132,7 +133,7 @@ if __name__ == '__main__':
     args = argparse.Namespace()
     parser.parse_args(namespace=args)
 
-    if args.help and not args.command:
+    if args.help and not args.command or len(sys.argv) <= 1:
         parser.print_help()
         exit
 
