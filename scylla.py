@@ -40,6 +40,7 @@ def list_api(scylla_api:ScyllaApi, list_modules:bool, list_module_commands:str):
         if not first:
             print('')
         first = False
+        print(f'---- {module_name} ----')
         list_module(scylla_api.modules[module_name])
 
 def test(node_address:str, port:int) -> ScyllaApi:
