@@ -104,7 +104,8 @@ def load_api(node_address:str, port:int) -> ScyllaApi:
     return scylla_api
 
 if __name__ == '__main__':
-    parser = ArgumentParser(description='Scylla api command line interface.')
+    extra_args_help=f"[module/]command [{'|'.join(ScyllaApiCommand.Method.kind_to_str)}] [args...]"
+    parser = ArgumentParser(description='Scylla api command line interface.', extra_args_help=extra_args_help)
     parser.add_argument(['-a', '--address'], dest='address', has_param=True,
                         help=f"IP address of server node (default: {ScyllaApi.default_address})")
     parser.add_argument(['-p', '--port'], dest='port', has_param=True,

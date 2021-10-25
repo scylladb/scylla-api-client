@@ -18,10 +18,16 @@ class ArgumentParser:
         def __repr__(self):
             return f"Arg(names={self.names}, dest={self.dest}, has_param={self.has_param}, help={self.help})"
 
-    def __init__(self, description:str):
+    def __init__(self, description:str, extra_args_help:str=None, enable_extra_args:bool=None):
         self.description = description
         self.progname = os.path.basename(sys.argv[0])
         self.args = dict()
+        if extra_args_help is not None:
+            self.enable_extra_args = True
+            self.extra_args_help = extra_args_help
+        else:
+            self.enable_extra_args = enable_extra_args == True
+            self.extra_args_help = '[extra_args...]' if self.enable_extra_args else ''
         self.extra_args = []
 
         self._raw_args = OrderedDict()
@@ -45,6 +51,8 @@ class ArgumentParser:
         for arg in self._raw_args.items():
             arg_param = f" <{arg.dest.upper()}>" if arg.has_param else ''
             s += f" [{arg.names[0]}{arg_param}]"
+        if self.extra_args_help:
+            s += f" [{self.extra_args_help}]"
         s += f"\n\n{self.description}\n\n"
         s += "Optional arguments:\n"
         for arg in self._raw_args.items():
@@ -84,7 +92,7 @@ class ArgumentParser:
                     self.args[arg.dest] = param
                 else:
                     self.args[arg.dest] = True
-            else:
+            elif self.enable_extra_args:
                 if opt == '--':
                     argc += 1
                 self.extra_args = argv[argc:]
