@@ -140,11 +140,10 @@ class ScyllaApiCommand:
 
         def get_help(self):
             s = f"{self.kind_to_str[self.kind]} {self.command_name}"
-            positional_help = ''
-            query_help = ''
+            help = ''
 
             def opt_help(name:str, required:bool, param:str='', help:str='', justify=21):
-                pfx = f"  {name} {param} {'(required)' if required else ''}"
+                pfx = f"  --{name} {param} {'(required)' if required else ''}"
                 s = pfx.ljust(justify)
                 if len(pfx) >= justify:
                     s += f"\n{''.ljust(justify)}"
@@ -155,18 +154,14 @@ class ScyllaApiCommand:
                 if opt.param_type == 'path':
                     s += f" {opt.name}"
                     oh = opt_help(opt.name, required=opt.required, param='', help=opt.help)
-                    positional_help += f"\n{oh}"
-            for opt in self.options.items():
+                    help += f"\n{oh}"
                 if opt.param_type == 'query':
-                    s += f" --{opt.name} {opt.name.upper()}"
-                    oh = opt_help(f"--{opt.name}", required=opt.required,
+                    s += f" {opt.name} {opt.name.upper()}"
+                    oh = opt_help(f"{opt.name}", required=opt.required,
                                   param=f"{opt.name.upper()}", help=opt.help)
-                    query_help += f"\n{oh}"
+                    help += f"\n{oh}"
 
-            if positional_help:
-                s += f"\n\nPositional arguments:{positional_help}"
-            if query_help:
-                s += f"\n\nQuery arguments:{query_help}"
+            s += f"\n\nArguments:{help}"
             
             return s
 
