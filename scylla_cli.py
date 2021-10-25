@@ -239,7 +239,7 @@ class ScyllaApiCommand:
                 log.warn(f"Operation not supported yet: {json.dumps(operation_def, indent=4)}")
                 continue
 
-            method = ScyllaApiCommand.Method(kind=kind, desc=operation_def["summary"], command_name=self.name)
+            method = ScyllaApiCommand.Method(kind=kind, desc=operation_def["summary"], command_name=f"{self.module_name}/{self.name}")
             for param_def in operation_def["parameters"]:
                 method.add_option(ScyllaApiOption(param_def["name"],
                     required=param_def.get("required", False),
@@ -262,8 +262,6 @@ class ScyllaApiCommand:
 
         log.debug(f"Invoking {self.name} {self.Method.kind_to_str[method_kind] if method_kind is not None else 'None'} {argv}")
         print_help = '-h' in argv or '--help' in argv
-        if print_help:
-            print(f"{self.name}:\n")
         kind_strings = []
         for kind, m in self.methods.items():
             kind_str = self.Method.kind_to_str[kind]
