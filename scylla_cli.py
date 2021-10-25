@@ -117,6 +117,7 @@ class ScyllaApiCommand:
             self.desc = desc
             self.options = options or OrderedDict()
             self.parser = None
+            self.rest_client = ScyllaRestClient()
             log.debug(f"Created {self.__repr__()}")
 
         def __repr__(self):
@@ -169,12 +170,12 @@ class ScyllaApiCommand:
             
             return s
 
-        def invoke(self, node_address:str, port:int, path_format:str, args:dict):
+        def invoke(self, path_format: str, args: dict):
             path_dict = dict()
             params_dict = dict()
             kind_str = self.kind_to_str[self.kind]
 
-            def get_value(opt_name:str):
+            def get_value(opt_name: str):
                 value = args.pop(opt_name)
                 if type(value) is list:
                     if len(value) == 1:
@@ -195,10 +196,10 @@ class ScyllaApiCommand:
                         params_dict[opt.name] = get_value(opt.name)
                     except KeyError:
                         pass
-            url = f"http://{node_address}:{port}/{path_format.format(**path_dict)}"
-            log.debug(f"request('{kind_str}', url={url}, params={params_dict})")
-            res = requests.request(kind_str, url=url, params=params_dict)
-            print(f"{res.text}")
+            res = self.rest_client.dispatch_rest_method(rest_method_kind=kind_str,
+                                                        resource_path=path_format.format(**path_dict),
+                                                        query_params=params_dict)
+            print(f"{res.status_code}: {res.text}")
 
     # init Command
     def __init__(self, module_name:str, command_name:str):
@@ -206,7 +207,7 @@ class ScyllaApiCommand:
         self.name = command_name
         # name format is used for generting the command url
         # it may include positional path arguments like "my_module/my_command/{param}"
-        self.name_format = f"{module_name}/{command_name}"
+        self.name_format = f"/{module_name}/{command_name}"
         self.methods = dict()
         log.debug(f"Created {self.__repr__()}")
 
@@ -287,7 +288,7 @@ class ScyllaApiCommand:
         provided_options = set(args.keys())
         required_options = set(opt.name for opt in method.options.items() if opt.required)
         assert(required_options.issubset(provided_options))
-        method.invoke(node_address=node_address, port=port, path_format=self.name_format, args=args)
+        method.invoke(path_format=self.name_format, args=args)
 
 class ScyllaApiModule:
     # init Module
@@ -314,17 +315,19 @@ class ScyllaApiModule:
     def add_command(self, command:ScyllaApiCommand):
         self.commands.insert(command.name, command)
 
-class ScyllaApi:
-    default_address = 'localhost'
-    default_port = 10000
 
-    # init ScyllaApi
-    def __init__(self):
+class ScyllaApi:
+    DEFAULT_HOST = "localhost"
+    DEFAULT_PORT = "10000"
+
+    def __init__(self, host: str = DEFAULT_HOST, port: str = DEFAULT_PORT):
+        self._host = host
+        self._port = port
         self.modules = OrderedDict()
-        self.client = None
+        self.client = ScyllaRestClient(host=self._host, port=self._port)
 
     def __repr__(self):
-        return f"ScyllaApi(node_address={self.node_address}, port={self.port}, modules={self.modules})"
+        return f"ScyllaApi(node_address={self._host}, port={self._port}, modules={self.modules})"
 
     def __str__(self):
         s = ''
@@ -338,9 +341,7 @@ class ScyllaApi:
     def add_module(self, module:ScyllaApiModule):
         self.modules.insert(module.name, module)
 
-    def load(self, node_address:str=default_address, port:int=default_port):
-        self.client = ScyllaRestClient(host=node_address, port=port)
-
+    def load(self):
         # FIXME: handle service down, assert minimum version
         top_json = self.client.get_raw_api_json()
         for module_def in top_json["apis"]:

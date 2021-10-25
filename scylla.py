@@ -99,18 +99,19 @@ def test(node_address:str, port:int) -> ScyllaApi:
     return test_api
 
 # FIXME: better name
-def load_api(node_address:str, port:int) -> ScyllaApi:
-    scylla_api = ScyllaApi()
-    scylla_api.load(node_address, port)
+def load_api(node_address:str, port:str) -> ScyllaApi:
+    scylla_api = ScyllaApi(host=node_address, port=port)
+    scylla_api.load()
     return scylla_api
+
 
 if __name__ == '__main__':
     extra_args_help=f"[module/]command [{'|'.join(ScyllaApiCommand.Method.kind_to_str)}] [args...]"
     parser = ArgumentParser(description='Scylla api command line interface.', extra_args_help=extra_args_help)
     parser.add_argument(['-a', '--address'], dest='address', has_param=True,
-                        help=f"IP address of server node (default: {ScyllaApi.default_address})")
+                        help=f"IP address of server node (default: {ScyllaApi.DEFAULT_HOST})")
     parser.add_argument(['-p', '--port'], dest='port', has_param=True,
-                        help=f"api port (default: {ScyllaApi.default_port})")
+                        help=f"api port (default: {ScyllaApi.DEFAULT_PORT})")
 
     parser.add_argument(['-l', '--list'], dest='list_api', help=f"List all API commands")
     parser.add_argument('--list-modules', dest='list_modules', help=f"List all API modules")
@@ -130,8 +131,8 @@ if __name__ == '__main__':
 
     log.debug('Starting')
 
-    node_address = parser.get('address', ScyllaApi.default_address)
-    port = parser.get('port', ScyllaApi.default_port)
+    node_address = parser.get('address', ScyllaApi.DEFAULT_HOST)
+    port = parser.get('port', ScyllaApi.DEFAULT_PORT)
     if parser.get('test'):
         scylla_api = test(node_address=node_address, port=port)
     else:
