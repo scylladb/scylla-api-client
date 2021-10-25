@@ -204,7 +204,7 @@ class ScyllaApiCommand:
     # init Command
     def __init__(self, module_name:str, command_name:str):
         self.module_name = module_name
-        self.name = re.sub(r'/\{.*$', '', command_name)
+        self.name = command_name
         # name format is used for generting the command url
         # it may include positional path arguments like "my_module/my_command/{param}"
         self.name_format = f"{module_name}/{command_name}"
