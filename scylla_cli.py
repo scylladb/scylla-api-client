@@ -344,6 +344,9 @@ class ScyllaApi:
 
         # FIXME: handle service down, assert minimum version
         top_json = self.client.get_raw_api_json()
+        if not top_json:
+            log.error("Service is down. Failed to get api data")
+            return
         for module_def in top_json["apis"]:
             # FIXME: handle service down, errors
             module_json = self.client.get_raw_api_json(f"{module_def['path']}/")

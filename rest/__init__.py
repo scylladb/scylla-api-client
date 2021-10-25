@@ -3,6 +3,7 @@ import json
 from logging import getLogger
 
 from requests import Response
+from requests.exceptions import ConnectionError
 
 logger = getLogger(__name__)
 
@@ -66,5 +67,9 @@ class RestClient(object):
         # construct url string
         url = f"{self.__url_prefix}{self.__host}:{self.port}{self.__endpoint}{resource_path}"
 
-        logger.info(f"Attempting a GET request for: {url}")
-        return requests.get(url=url, params=None, headers=headers)
+        logger.debug(f"Attempting a GET request for: {url}")
+        try:
+            return requests.get(url=url, params=None, headers=headers)
+        except ConnectionError as details:
+            logger.error(f"Connection error: {details}")
+            return None
