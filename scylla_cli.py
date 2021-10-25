@@ -193,7 +193,7 @@ class ScyllaApiCommand:
                         return
                 else:
                     try:
-                        path_dict[opt.name] = get_value(opt.name)
+                        params_dict[opt.name] = get_value(opt.name)
                     except KeyError:
                         pass
             url = f"http://{node_address}:{port}/{path_format.format(**path_dict)}"
