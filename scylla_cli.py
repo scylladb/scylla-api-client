@@ -141,7 +141,7 @@ class ScyllaApiCommand:
         def get_help(self):
             s = f"{self.kind_to_str[self.kind]} {self.command_name}"
             required_help = ''
-            optional_help = ''
+            regular_help = ''
 
             def opt_help(name:str, param:str='', help:str='', justify=21):
                 pfx = f"  {name} {param}"
@@ -160,12 +160,12 @@ class ScyllaApiCommand:
                 if not opt.required:
                     s += f" [--{opt.name} {opt.name.upper()}]"
                     oh = opt_help(f"--{opt.name}", param=opt.name.upper(), help=opt.help)
-                    optional_help += f"\n{oh}"
+                    regular_help += f"\n{oh}"
 
             if required_help:
                 s += f"\n\nRequired arguments:{required_help}"
-            if optional_help:
-                s += f"\n\nOptional arguments:{optional_help}"
+            if regular_help:
+                s += f"\n\nOptional arguments:{regular_help}"
             
             return s
 
