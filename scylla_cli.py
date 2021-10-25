@@ -81,23 +81,35 @@ class OrderedDict:
 
 class ScyllaApiOption:
     # init Command
-    def __init__(self, name:str, required:bool = False, param_type:str='query',
+    def __init__(self, name:str, required:bool = False, ptype:str=None, param_type:str='query',
                  allowed_values=[], help:str=''):
         self.name = name
         self.required = required
+        if (not ptype in ["array", "double", "boolean", "long", "string"]):
+            log.warn(f"Unsupported option type {ptype} for option {name}")
+        self.type = ptype
         self.param_type = param_type
-        self.allowed_values = allowed_values
+        if self.type == "boolean":
+            self.allowed_values = ["false", "true"]
+        else:
+            self.allowed_values = allowed_values
         self.help = help
         log.debug(f"Created {self.__repr__()}")
 
     def __repr__(self):
-        return f"ApiCommandOption(name={self.name}, required={self.required}, param_type={self.param_type}, allowed_values={self.allowed_values}, help={self.help})"
+        return f"ApiCommandOption(name={self.name}, required={self.required}, " \
+                "type={self.type}, param_type={self.param_type}, "              \
+                "allowed_values={self.allowed_values}, help={self.help})"
 
     def __str__(self):
-        return f"option_name={self.name}, required={self.required}, param_type={self.param_type}, allowed_values={self.allowed_values}, help={self.help}"
+        return f"option_name={self.name}, required={self.required}, " \
+                "type={self.type}, param_type={self.param_type}, "    \
+                "allowed_values={self.allowed_values}, help={self.help}"
 
     def add_argument(self, parser:ArgumentParser):
-        parser.add_argument(f"--{self.name}", dest=self.name, help=self.help, nargs=1, choices=self.allowed_values if self.allowed_values else None)
+        # FIXME: handle options without arguments
+        parser.add_argument(f"--{self.name}", dest=self.name, help=self.help, nargs=1,
+                            choices=self.allowed_values if self.allowed_values else None)
 
 class ScyllaApiCommand:
     class Method:
@@ -242,6 +254,7 @@ class ScyllaApiCommand:
             for param_def in operation_def["parameters"]:
                 method.add_option(ScyllaApiOption(param_def["name"],
                     required=param_def.get("required", False),
+                    ptype=param_def.get("type", None),
                     param_type=param_def.get("paramType", 'query'),
                     allowed_values=param_def.get("enum", []),
                     help=param_def["description"]))
@@ -284,10 +297,12 @@ class ScyllaApiCommand:
             print(f"{self.name}: {method_kind} method is not supported")
             return
         args = vars(method.parser.parse_args(argv))
-        # FIXME: check properly option format (e.g.)
-        provided_options = set(args.keys())
+        provided_options = set(key for key, val in args.items() if val)
         required_options = set(opt.name for opt in method.options.items() if opt.required)
-        assert(required_options.issubset(provided_options))
+        missing_options = required_options - provided_options
+        if missing_options:
+            print(f"Missing required option{'s' if len(missing_options) > 1 else ''} {missing_options}")
+            return
         method.invoke(node_address=node_address, port=port, path_format=self.name_format, args=args)
 
 class ScyllaApiModule:
