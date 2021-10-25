@@ -345,9 +345,9 @@ class ScyllaApiModule:
 
 class ScyllaApi:
     DEFAULT_HOST = "localhost"
-    DEFAULT_PORT = "10000"
+    DEFAULT_PORT = 10000
 
-    def __init__(self, host: str = DEFAULT_HOST, port: str = DEFAULT_PORT):
+    def __init__(self, host: str = DEFAULT_HOST, port: int = DEFAULT_PORT):
         self._host = host
         self._port = port
         self.modules = OrderedDict()
