@@ -5,7 +5,7 @@ Usage::
     ./scylla.py --help [command [args...]]
 """
 
-import argparse
+from simple_argparser import ArgumentParser
 import logging
 import sys
 
@@ -104,58 +104,47 @@ def load_api(node_address:str, port:int) -> ScyllaApi:
     return scylla_api
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Scylla api command line interface.', add_help=False)
-    parser.add_argument('-h', '--help', dest='help', action='store_const', const=True, default=False,
-                        help=f"Show this help message and exit")
-
-    parser.add_argument('-a', '--address', dest='address', type=str, default=ScyllaApi.default_address,
+    extra_args_help=f"[module/]command [{'|'.join(ScyllaApiCommand.Method.kind_to_str)}] [args...]"
+    parser = ArgumentParser(description='Scylla api command line interface.', extra_args_help=extra_args_help)
+    parser.add_argument(['-a', '--address'], dest='address', has_param=True,
                         help=f"IP address of server node (default: {ScyllaApi.default_address})")
-    parser.add_argument('-p', '--port', dest='port', type=int, default=ScyllaApi.default_port,
+    parser.add_argument(['-p', '--port'], dest='port', has_param=True,
                         help=f"api port (default: {ScyllaApi.default_port})")
 
-    parser.add_argument('-l', '--list', dest='list_api', action='store_const', const=True, default=False,
-                        help=f"List all API commands")
-    parser.add_argument('--list-modules', dest='list_modules', action='store_const', const=True, default=False,
-                        help=f"List all API modules")
-    parser.add_argument('--list-module-commands', dest='list_module_commands', type=str,
+    parser.add_argument(['-l', '--list'], dest='list_api', help=f"List all API commands")
+    parser.add_argument('--list-modules', dest='list_modules', help=f"List all API modules")
+    parser.add_argument('--list-module-commands', dest='list_module_commands', has_param=True,
                         help=f"List all commands in an API module")
 
-    parser.add_argument('command', nargs='?',
-                        help=f"API command to invoke. module/command can be use to specify a command in a module")
-    parser.add_argument('command_args', nargs='*',
-                        help=f"Optional arguments for the API command. Use `command -h` to print the command help message and exit")
+    parser.add_argument(['-d', '--debug'], dest='debug', help=f"Turn on debug logging (default=False)")
+    parser.add_argument(['-t', '--test'], dest='test', help=f"Run test (default=False)")
 
-    parser.add_argument('-d', '--debug', dest='debug', action='store_const', const=True, default=False,
-                        help=f"Turn on debug logging (default=False)")
-    parser.add_argument('-t', '--test', dest='test', action='store_const', const=True, default=False,
-                        help=f"Run test (default=False)")
+    parser.parse_args()
 
-    args = argparse.Namespace()
-    parser.parse_args(namespace=args)
-
-    if args.help and not args.command or len(sys.argv) <= 1:
-        parser.print_help()
-        exit()
+    if not parser.args and not parser.extra_args:
+        parser.usage()
 
     logging.basicConfig(format='%(asctime)s,%(msecs)03d %(process)-7d %(name)-25s %(levelname)-8s | %(message)s')
-    baselog.setLevel(logging.DEBUG if args.debug else logging.INFO)
+    baselog.setLevel(logging.DEBUG if parser.get('debug') else logging.INFO)
 
     log.debug('Starting')
 
-    if args.test:
-        scylla_api = test(args.address, args.port)
+    node_address = parser.get('address', ScyllaApi.default_address)
+    port = parser.get('port', ScyllaApi.default_port)
+    if parser.get('test'):
+        scylla_api = test(node_address=node_address, port=port)
     else:
         # for now
-        scylla_api = load_api(args.address, args.port)
+        scylla_api = load_api(node_address=node_address, port=port)
 
     # FIXME: load only needed module(s)
 
-    if args.list_api or args.list_modules or args.list_module_commands:
-        list_api(scylla_api, args.list_modules, args.list_module_commands)
+    if parser.get('list_api') or parser.get('list_modules') or parser.get('list_module_commands'):
+        list_api(scylla_api, parser.get('list_modules'), parser.get('list_module_commands'))
         exit()
 
-    if args.command:
-        command_name = args.command.strip(' /')
+    if parser.extra_args:
+        command_name = parser.extra_args[0].strip(' /')
         sep = command_name.find('/')
         if sep > 0:
             module_name = command_name[:sep]
@@ -187,10 +176,8 @@ if __name__ == '__main__':
                 print(f"Could not find command '{command_name}'")
                 exit(1)
 
-        argv = args.command_args
-        if args.help:
-            argv.append('-h')
-        command.invoke(node_address=args.address, port=args.port, argv=argv)
+        argv = parser.extra_args[1:]
+        command.invoke(node_address=node_address, port=port, argv=argv)
 
     log.debug('done')
     logging.shutdown()
