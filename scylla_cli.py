@@ -126,9 +126,11 @@ class ScyllaApiCommand:
                      scylla_rest_client: ScyllaRestClient,
                      kind=GET,
                      desc:str='',
+                     module_name:str='',
                      command_name:str='',
                      options:OrderedDict=None):
             self.kind = kind
+            self.module_name = module_name
             self.command_name = command_name
             self.desc = desc
             self.options = options or OrderedDict()
@@ -150,14 +152,14 @@ class ScyllaApiCommand:
             self.options.insert(option.name, option)
 
         def generate_parser(self):
-            parser = ArgumentParser(description=f"{self.command_name} {self.kind_to_str[self.kind]} - {self.desc}", add_help=False)
+            parser = ArgumentParser(prog=f"{self.module_name} {self.command_name} {self.kind_to_str[self.kind]}", description=self.desc, add_help=False)
             for opt in self.options.items():
                 opt.add_argument(parser)
             self.parser = parser
 
         def get_help(self):
             help_str = f"{self.kind_to_str[self.kind]} - {self.desc}\n\n"
-            usage = f"usage: {self.command_name} {self.kind_to_str[self.kind]}"
+            usage = f"usage: {self.module_name} {self.command_name} {self.kind_to_str[self.kind]}"
             required_help = ''
             optional_help = ''
 
@@ -261,7 +263,7 @@ class ScyllaApiCommand:
                 continue
 
             method = ScyllaApiCommand.Method(scylla_rest_client=ScyllaRestClient(self._host, self._port),
-                                             kind=kind, desc=operation_def["summary"], command_name=f"{self.module_name}/{self.name}")
+                                             kind=kind, desc=operation_def["summary"], module_name=self.module_name, command_name=self.name)
             for param_def in operation_def["parameters"]:
                 method.add_option(ScyllaApiOption(param_def["name"],
                     required=param_def.get("required", False),
@@ -294,7 +296,8 @@ class ScyllaApiCommand:
             if print_help and (method_kind is None or method_kind == kind):
                 if len(kind_strings) > 1:
                     print('---')
-                print(f"{m.get_help()}")
+                # print(f"{m.get_help()}")
+                m.parser.print_help()
         if print_help:
             return
         if method_kind is None:
