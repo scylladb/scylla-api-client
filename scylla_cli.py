@@ -163,23 +163,29 @@ class ScyllaApiCommand:
             required_help = ''
             optional_help = ''
 
-            def opt_help(name:str, param:str='', help:str='', justify=21):
-                pfx = f"  {name}, {param}"
+            def opt_help(name:str, param:str='', help:str='', justify=31):
+                pfx = f"  {name} {param}"
                 s = pfx.ljust(justify)
                 if len(pfx) >= justify:
                     s += f"\n{''.ljust(justify)}"
                 s += f" {help}"
                 return s
 
+            def param_help(opt:ScyllaApiOption):
+                if opt.allowed_values:
+                    # follow argparse convention for choices 
+                    return f"{{{','.join(opt.allowed_values)}}}"
+                return opt.name.upper()
+
             for opt in self.options.items():
                 if opt.required:
-                    usage += f" --{opt.name} {opt.name.upper()}"
-                    oh = opt_help(f"--{opt.name}", param=opt.name.upper(), help=opt.help)
+                    usage += f" --{opt.name} {param_help(opt)}"
+                    oh = opt_help(f"--{opt.name}", param=param_help(opt), help=opt.help)
                     required_help += f"\n{oh}"
             for opt in self.options.items():
                 if not opt.required:
-                    usage += f" [--{opt.name} {opt.name.upper()}]"
-                    oh = opt_help(f"--{opt.name}", param=opt.name.upper(), help=opt.help)
+                    usage += f" [--{opt.name} {param_help(opt)}]"
+                    oh = opt_help(f"--{opt.name}", param=param_help(opt), help=opt.help)
                     optional_help += f"\n{oh}"
 
             help_str += usage
