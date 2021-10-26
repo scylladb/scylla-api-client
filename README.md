@@ -1,15 +1,22 @@
 # Scylla-CLI
+Scylla CLI is a command line utility implementing a thin client directly utilizing the Scylla REST API
 
-Add some description here
 
-## Installation
-```shell
+## Requirements
+* python > 3.8
+* requests
+* pytest (developers)
+
+
+## Usage
+Make sure you have all the [required](#Requirements) packages,
+You can install them in a separate environment by venv:
+```
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Usage
 See `./scylla.py --help` for all options, below are some sample uses:
 
 * Show all API modules
@@ -59,9 +66,15 @@ See `./scylla.py --help` for all options, below are some sample uses:
     $ ./scylla.py system/logger/{name} POST --name httpd --level debug
     ```
 
+
 ## Tests
 pytest is used for writing and executing tests
 to run tests you can execute:
 ```
 pytest -s -v tests/
 ```
+
+
+## Design
+
+![](scylla-cli-design.png)
