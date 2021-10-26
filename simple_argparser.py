@@ -9,7 +9,7 @@ from scylla_cli import OrderedDict
 
 class ArgumentParser:
     class Arg:
-        def __init__(self, names:list[str], dest:str, has_param=False, help:str=''):
+        def __init__(self, names:list, dest:str, has_param=False, help:str=''):
             self.names = names
             self.dest = dest
             self.has_param = has_param
@@ -31,11 +31,11 @@ class ArgumentParser:
         self.extra_args = []
 
         self._raw_args = OrderedDict()
-        self._by_name = dict[str, self.Arg]()
+        self._by_name = dict()
 
         self.add_argument(['-h', '--help'], dest='help', help='show this help message and exit')
 
-    def add_argument(self, names:list[str], dest:str, has_param=False, help:str=''):
+    def add_argument(self, names:list, dest:str, has_param=False, help:str=''):
         if type(names) is str:
             names = [names]
         arg = self.Arg(names, dest=dest, has_param=has_param, help=help)
@@ -72,7 +72,7 @@ class ArgumentParser:
         if do_exit:
             exit()
 
-    def parse_args(self, argv:list[str]=None):
+    def parse_args(self, argv:list=None):
         if not argv:
             argv = sys.argv
         argc = 0
