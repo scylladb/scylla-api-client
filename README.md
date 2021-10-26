@@ -14,7 +14,7 @@ You can install them in a separate environment by venv:
 ```
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
 See `./scylla.py --help` for all options, below are some sample uses:
