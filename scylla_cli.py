@@ -107,7 +107,7 @@ class ScyllaApiOption:
 
     def add_argument(self, parser:ArgumentParser):
         # FIXME: handle options without arguments
-        parser.add_argument(f"--{self.name}", dest=self.name, help=self.help, nargs=1,
+        parser.add_argument(f"--{self.name}", dest=self.name, help=self.help, nargs=1, required=self.required,
                             choices=self.allowed_values if self.allowed_values else None)
 
 class ScyllaApiCommand:
