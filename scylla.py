@@ -52,61 +52,6 @@ class Lister:
             print(f'---- {module_name} ----')
             self.list_module_commands(scylla_api.modules[module_name])
 
-def test(node_address:str, port:int) -> ScyllaApi:
-    log.debug('Starting test')
-
-    test_command = ScyllaApiCommand(module_name='test_module', command_name='test_command')
-    get_method = ScyllaApiCommand.Method(kind=ScyllaApiCommand.Method.GET, command_name='test_command')
-    get_method.add_option(ScyllaApiOption('test_positional_get_option_1', param_type='path', help='help for test_positional_get_option_1'))
-    get_method.add_option(ScyllaApiOption('test_get_option_2', help='help for test_get_option_2'))
-    test_command.add_method(get_method)
-
-    post_method = ScyllaApiCommand.Method(kind=ScyllaApiCommand.Method.POST, command_name='test_command')
-    post_method.add_option(ScyllaApiOption('test_post_option_1', allowed_values=['hello', 'world'], help='help for test_post_option_1'))
-    test_command.add_method(post_method)
-
-    log.debug(f"test_command={test_command}")
-
-    assert test_command.methods[ScyllaApiCommand.Method.GET].options[0].name == 'test_positional_get_option_1', f"{test_command.methods[ScyllaApiCommand.Method.GET].options[0].name} != 'test_positional_get_option_1'"
-    assert test_command.methods[ScyllaApiCommand.Method.GET].options[1].name == 'test_get_option_2', f"{test_command.methods[ScyllaApiCommand.Method.GET].options[1].name} != 'test_get_option_2'"
-    assert test_command.methods[ScyllaApiCommand.Method.POST].options[0].name == 'test_post_option_1', f"{test_command.methods[ScyllaApiCommand.Method.POST].options[0].name} == 'test_post_option_1'"
-
-    test_module = ScyllaApiModule('test_module')
-    test_module.add_command(test_command)
-    assert test_module.commands.count() == 1, f"Expect len to be 1, but got {test_module.commands.count()}"
-
-    test_command_1 = ScyllaApiCommand(module_name='test_module', command_name='test_command_1')
-    get_method = ScyllaApiCommand.Method(kind=ScyllaApiCommand.Method.GET, command_name='test_command_1')
-    get_method.add_option(ScyllaApiOption('test_positional_get_option_1_1', param_type='path', help='help for test_positional_get_option_1_1'))
-    get_method.add_option(ScyllaApiOption('test_get_option_1_2', help='help for test_get_option_1_2'))
-    test_command_1.add_method(get_method)
-    test_module.add_command(test_command_1)
-    assert test_module.commands.count() == 2, f"Expect len to be 1, but got {test_module.commands.count()}"
-
-    assert test_module.commands[0] == test_command
-    assert test_module.commands[1] == test_command_1
-
-    test_api = ScyllaApi()
-    test_api.add_module(test_module)
-
-    test_module_1 = ScyllaApiModule('test_module_1')
-    assert test_module_1.commands.count() == 0, f"Expect len to be 0, but got {test_module_1.commands.count()}"
-    test_module_1.add_command(test_command_1)
-    assert test_module_1.commands.count() == 1, f"Expect len to be 1, but got {test_module_1.commands.count()}"
-
-    test_api.add_module(test_module_1)
-
-    log.debug(f"{test_api}")
-
-    assert test_api.modules[0] == test_module
-    assert test_api.modules[1] == test_module_1
-    assert test_api.modules['test_module'] == test_module
-    assert test_api.modules['test_module_1'] == test_module_1
-
-    log.debug('Test done')
-
-    return test_api
-
 # FIXME: better name
 def load_api(node_address:str, port:str) -> ScyllaApi:
     scylla_api = ScyllaApi(host=node_address, port=port)
@@ -128,7 +73,6 @@ if __name__ == '__main__':
                         help=f"List all commands in an API module")
 
     parser.add_argument(['-d', '--debug'], dest='debug', help=f"Turn on debug logging (default=False)")
-    parser.add_argument(['-t', '--test'], dest='test', help=f"Run test (default=False)")
 
     parser.parse_args()
 
@@ -142,11 +86,7 @@ if __name__ == '__main__':
 
     node_address = parser.get('address', ScyllaApi.DEFAULT_HOST)
     port = parser.get('port', ScyllaApi.DEFAULT_PORT)
-    if parser.get('test'):
-        scylla_api = test(node_address=node_address, port=port)
-    else:
-        # for now
-        scylla_api = load_api(node_address=node_address, port=port)
+    scylla_api = load_api(node_address=node_address, port=port)
 
     # FIXME: load only needed module(s)
 
