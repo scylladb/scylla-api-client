@@ -296,8 +296,8 @@ class ScyllaApiCommand:
             if print_help and (method_kind is None or method_kind == kind):
                 if len(kind_strings) > 1:
                     print('---')
-                # print(f"{m.get_help()}")
-                m.parser.print_help()
+                print(f"{m.get_help()}")
+                # m.parser.print_help()
         if print_help:
             return
         if method_kind is None:
