@@ -239,7 +239,7 @@ class ScyllaApiCommand:
         return f"ApiCommand(name={self.name}, methods={self.methods})"
 
     def __str__(self):
-        s = f"{self.module_name}/{self.name}:"
+        s = f"{self.module_name} {self.name}:"
         for _, method in self.methods.items():
             method_str = f"{method}"
             re.sub('\n', '\n    ', method_str)
