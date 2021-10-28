@@ -9,14 +9,15 @@ from scylla_cli import OrderedDict
 
 class ArgumentParser:
     class Arg:
-        def __init__(self, names:list, dest:str, has_param=False, help:str=''):
+        def __init__(self, names:list, dest:str, has_param=False, default_param=None, help:str=''):
             self.names = names
             self.dest = dest
             self.has_param = has_param
+            self.default_param = default_param
             self.help = help
 
         def __repr__(self):
-            return f"Arg(names={self.names}, dest={self.dest}, has_param={self.has_param}, help={self.help})"
+            return f"Arg(names={self.names}, dest={self.dest}, has_param={self.has_param}, default_param={self.default_param}, help={self.help})"
 
     def __init__(self, description:str, extra_args_help:str=None, enable_extra_args:bool=None):
         self.description = description
@@ -35,10 +36,10 @@ class ArgumentParser:
 
         self.add_argument(['-h', '--help'], dest='help', help='show this help message and exit')
 
-    def add_argument(self, names:list, dest:str, has_param=False, help:str=''):
+    def add_argument(self, names:list, dest:str, has_param=False, default_param=False, help:str=''):
         if type(names) is str:
             names = [names]
-        arg = self.Arg(names, dest=dest, has_param=has_param, help=help)
+        arg = self.Arg(names, dest=dest, has_param=has_param, default_param=default_param, help=help)
         assert len(names)
         self._raw_args.insert(names[0], arg)
         for n in names:
@@ -80,16 +81,24 @@ class ArgumentParser:
             argc += 1
         while argc < len(argv):
             opt = argv[argc]
+            param = None
+            pos = opt.find('=')
+            if pos > 0:
+                param = opt[pos+1:]
+                opt = opt[:pos]
             if opt in self._by_name:
                 argc += 1
                 arg = self._by_name[opt]
                 if arg.has_param:
-                    if argc < len(argv):
-                        param = argv[argc]
-                        argc += 1
-                    else:
-                        print(f"Missing {arg.dest.upper()} parameter for option '{opt}'\n\n")
-                        self.usage()
+                    if param is None:
+                        if argc < len(argv) and not argv[argc].startswith('-'):
+                            param = argv[argc]
+                            argc += 1
+                        elif arg.default_param is not None:
+                            param = arg.default_param
+                        else:
+                            print(f"Missing {arg.dest.upper()} parameter for option '{opt}'\n\n")
+                            self.usage()
                     self.args[arg.dest] = param
                 else:
                     self.args[arg.dest] = True

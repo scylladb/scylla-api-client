@@ -9,6 +9,7 @@ from re import S
 from simple_argparser import ArgumentParser
 import logging
 import sys
+from pprint import PrettyPrinter
 
 baselog = logging.getLogger('scylla.cli')
 log = logging.getLogger('scylla.cli.util')
@@ -66,6 +67,11 @@ if __name__ == '__main__':
                         help=f"IP address of server node (default: {ScyllaApi.DEFAULT_HOST})")
     parser.add_argument(['-p', '--port'], dest='port', has_param=True,
                         help=f"api port (default: {ScyllaApi.DEFAULT_PORT})")
+
+    parser.add_argument(['-pp', '--pretty-print'], dest='pprint',
+                        help=f"enable pretty print")
+    parser.add_argument(['-pp-opts', '--pretty-print-options'], dest='pprint_options', has_param=True,
+                        help=f"pretty print options as width[:indent] (default: 200:1)")
 
     parser.add_argument(['-l', '--list'], dest='list_api', help=f"List all API commands")
     parser.add_argument(['-lm', '--list-modules'], dest='list_modules', help=f"List all API modules")
@@ -149,7 +155,21 @@ if __name__ == '__main__':
                 print(f"Could not find command '{command_name}'")
                 exit(1)
 
-    command.invoke(node_address=node_address, port=port, argv=argv)
+    pretty_printer = None
+    pprint_opts = parser.get('pprint_options', '')
+    pprint = parser.get('pprint', pprint_opts != '')
+    if pprint:
+        width = 200
+        indent = 1
+        if pprint_opts:
+            opts = pprint_opts.split(':')
+            try:
+                width = int(opts[0])
+                indent = int(opts[1])
+            except IndexError:
+                pass
+        pretty_printer = PrettyPrinter(width=width, indent=indent)
+    command.invoke(node_address=node_address, port=port, argv=argv, pretty_printer=pretty_printer)
 
     log.debug('done')
     logging.shutdown()

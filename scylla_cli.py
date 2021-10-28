@@ -6,6 +6,7 @@ import logging
 import re
 import json
 from argparse import ArgumentParser
+from pprint import PrettyPrinter
 
 from rest.scylla_rest_client import ScyllaRestClient
 
@@ -196,7 +197,7 @@ class ScyllaApiCommand:
             
             return help_str
 
-        def invoke(self, path_format: str, args: dict):
+        def invoke(self, path_format: str, args: dict, pretty_printer:PrettyPrinter=None):
             path_dict = dict()
             params_dict = dict()
             kind_str = self.kind_to_str[self.kind]
@@ -226,8 +227,12 @@ class ScyllaApiCommand:
             res = self.rest_client.dispatch_rest_method(rest_method_kind=kind_str,
                                                         resource_path=path_format.format(**path_dict),
                                                         query_params=params_dict)
-            response = res.text if res.status_code == 200 else f"{res.json()}"
-            print(response)
+            if res.status_code != 200:
+                print(res.json())
+            elif not pretty_printer:
+                print(res.text)
+            else:
+                pretty_printer.pprint(res.json())
 
     # init Command
     def __init__(self, module_name:str, command_name:str, host: str, port: str):
@@ -279,7 +284,7 @@ class ScyllaApiCommand:
                     help=param_def["description"]))
             self.add_method(method)
 
-    def invoke(self, node_address:str, port:int, argv=[]):
+    def invoke(self, node_address:str, port:int, argv=[], pretty_printer:PrettyPrinter=None):
         method_kind = None
         if len(argv) and argv[0] in self.Method.str_to_kind:
             method_kind = self.Method.str_to_kind[argv[0]]
@@ -321,7 +326,7 @@ class ScyllaApiCommand:
         if missing_options:
             print(f"Missing required option{'s' if len(missing_options) > 1 else ''} {missing_options}")
             return
-        method.invoke(path_format=self.name_format, args=args)
+        method.invoke(path_format=self.name_format, args=args, pretty_printer=pretty_printer)
 
 class ScyllaApiModule:
     # init Module
