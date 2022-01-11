@@ -8,7 +8,7 @@ import json
 from argparse import ArgumentParser
 from pprint import PrettyPrinter
 
-from rest.scylla_rest_client import ScyllaRestClient
+from .rest.scylla_rest_client import ScyllaRestClient
 
 log = logging.getLogger('scylla.cli')
 

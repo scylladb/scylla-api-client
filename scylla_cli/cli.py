@@ -6,7 +6,7 @@ Usage::
 """
 
 from re import S
-from simple_argparser import ArgumentParser
+from .custom_argparser import ArgumentParser
 import logging
 import sys
 from pprint import PrettyPrinter
@@ -14,7 +14,7 @@ from pprint import PrettyPrinter
 baselog = logging.getLogger('scylla.cli')
 log = logging.getLogger('scylla.cli.util')
 
-from scylla_cli import ScyllaApi, ScyllaApiModule, ScyllaApiCommand, ScyllaApiOption
+from .api import ScyllaApi, ScyllaApiModule, ScyllaApiCommand, ScyllaApiOption
 
 class Lister:
     def __init__(self, scylla_api:ScyllaApi):
@@ -40,18 +40,18 @@ class Lister:
 
         if list_module_commands:
             try:
-                self.list_module_commands(scylla_api.modules[list_module_commands])
+                self.list_module_commands(self.scylla_api.modules[list_module_commands])
             except KeyError:
                 print(f"Error: module '{list_module_commands}' not found")
             return
 
         first = True
-        for module_name in scylla_api.modules.keys():
+        for module_name in self.scylla_api.modules.keys():
             if not first:
                 print('')
             first = False
             print(f'---- {module_name} ----')
-            self.list_module_commands(scylla_api.modules[module_name])
+            self.list_module_commands(self.scylla_api.modules[module_name])
 
 # FIXME: better name
 def load_api(node_address:str, port:str) -> ScyllaApi:
@@ -60,7 +60,7 @@ def load_api(node_address:str, port:str) -> ScyllaApi:
     return scylla_api
 
 
-if __name__ == '__main__':
+def main():
     extra_args_help=f"[module] command [{'|'.join(ScyllaApiCommand.Method.kind_to_str)}] [args...]"
     parser = ArgumentParser(description='Scylla api command line interface.', extra_args_help=extra_args_help)
     parser.add_argument(['-a', '--address'], dest='address', has_param=True,
@@ -173,3 +173,7 @@ if __name__ == '__main__':
 
     log.debug('done')
     logging.shutdown()
+
+
+if __name__ == '__main__':
+    main()

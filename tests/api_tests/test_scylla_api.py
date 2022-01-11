@@ -1,6 +1,6 @@
 import pytest
 
-from scylla_cli import ScyllaApi
+from scylla_cli.api import ScyllaApi
 
 
 @pytest.fixture(scope="module")
