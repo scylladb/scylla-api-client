@@ -60,7 +60,7 @@ def load_api(node_address:str, port:str) -> ScyllaApi:
     return scylla_api
 
 
-if __name__ == '__main__':
+def main():
     extra_args_help=f"[module] command [{'|'.join(ScyllaApiCommand.Method.kind_to_str)}] [args...]"
     parser = ArgumentParser(description='Scylla api command line interface.', extra_args_help=extra_args_help)
     parser.add_argument(['-a', '--address'], dest='address', has_param=True,
@@ -173,3 +173,7 @@ if __name__ == '__main__':
 
     log.debug('done')
     logging.shutdown()
+
+
+if __name__ == '__main__':
+    main()
