@@ -6,7 +6,7 @@ Usage::
 """
 
 from re import S
-from custom_argparser import ArgumentParser
+from .custom_argparser import ArgumentParser
 import logging
 import sys
 from pprint import PrettyPrinter
@@ -14,7 +14,7 @@ from pprint import PrettyPrinter
 baselog = logging.getLogger('scylla.cli')
 log = logging.getLogger('scylla.cli.util')
 
-from api import ScyllaApi, ScyllaApiModule, ScyllaApiCommand, ScyllaApiOption
+from .api import ScyllaApi, ScyllaApiModule, ScyllaApiCommand, ScyllaApiOption
 
 class Lister:
     def __init__(self, scylla_api:ScyllaApi):

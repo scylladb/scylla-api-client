@@ -5,7 +5,7 @@ Simple command line arguments parser
 import os
 import sys
 
-from api import OrderedDict
+from .api import OrderedDict
 
 class ArgumentParser:
     class Arg:

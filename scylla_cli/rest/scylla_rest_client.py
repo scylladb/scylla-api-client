@@ -1,6 +1,6 @@
 from requests import Response
 
-from rest import RestClient
+from . import RestClient
 
 
 class ScyllaRestClient(RestClient):
