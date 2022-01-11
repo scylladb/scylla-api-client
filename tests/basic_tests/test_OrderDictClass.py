@@ -1,4 +1,4 @@
-from scylla_cli import OrderedDict
+from scylla_cli.api import OrderedDict
 
 
 
