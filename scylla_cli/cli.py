@@ -40,18 +40,18 @@ class Lister:
 
         if list_module_commands:
             try:
-                self.list_module_commands(scylla_api.modules[list_module_commands])
+                self.list_module_commands(self.scylla_api.modules[list_module_commands])
             except KeyError:
                 print(f"Error: module '{list_module_commands}' not found")
             return
 
         first = True
-        for module_name in scylla_api.modules.keys():
+        for module_name in self.scylla_api.modules.keys():
             if not first:
                 print('')
             first = False
             print(f'---- {module_name} ----')
-            self.list_module_commands(scylla_api.modules[module_name])
+            self.list_module_commands(self.scylla_api.modules[module_name])
 
 # FIXME: better name
 def load_api(node_address:str, port:str) -> ScyllaApi:
