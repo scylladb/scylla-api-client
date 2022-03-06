@@ -1,5 +1,5 @@
 from pytest import fixture
-from scylla_cli.api import OrderedDict, ScyllaApiCommand
+from scylla_api.api import OrderedDict, ScyllaApiCommand
 
 
 def test_command():

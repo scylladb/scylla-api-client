@@ -1,4 +1,4 @@
-from scylla_cli.api import ScyllaApi
+from scylla_api.api import ScyllaApi
 
 
 def test_create_default_scyllaapi():
