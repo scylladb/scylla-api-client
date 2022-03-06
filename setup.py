@@ -6,7 +6,7 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
     name='scylla-api',
-    version='0.0.1',    # Will be moved later to be set as part of the CI pipeline
+    version='1.0',  # Will be moved later to be set as part of the CI pipeline
     description='Command line tool for managing Scylla Clusters',
     long_description=long_description,
     long_description_content_type='text/markdown',
