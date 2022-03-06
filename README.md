@@ -78,3 +78,16 @@ pytest -s -v tests/
 ## Design
 
 ![](scylla-cli-design.png)
+
+
+## Release
+Releases are published automatically by GitHub Actions when a tag (v**) is pushed to GitHub.
+
+1. Update Scylla-API version on `setup.cfg`
+2. Create a release commit `release <version>`
+3. Create and push a tag based on the new version
+
+```commandline
+git tag v1.0 <commit>
+git push upstream v1.0
+```
