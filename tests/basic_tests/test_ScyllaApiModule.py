@@ -1,5 +1,5 @@
 from pytest import fixture
-from scylla_cli.api import ScyllaApiModule, OrderedDict
+from scylla_api.api import ScyllaApiModule, OrderedDict
 
 
 @fixture
