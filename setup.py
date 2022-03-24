@@ -6,7 +6,6 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
     name='scylla-api',
-    version='1.0',  # Will be moved later to be set as part of the CI pipeline
     description='Command line tool for managing Scylla Clusters',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -16,6 +15,8 @@ setup(
     include_package_data=True,
     python_requires='>=3.6',
     install_requires=['requests'],
+    use_scm_version=True,
+    setup_requires=['setuptools_scm'],
     entry_points={
         'console_scripts': [
             'scylla-api=scylla_api.__main__:main',
