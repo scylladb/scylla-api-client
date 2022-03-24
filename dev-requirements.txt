@@ -1,0 +1,5 @@
+requests
+pytest
+flake8
+build
+twine
