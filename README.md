@@ -7,21 +7,18 @@ Scylla API Client is a command line utility implementing a thin client directly 
 * requests
 * pytest (developers)
 
+## Installation
+```
+pip install scylla-api-client
+```
 
 ## Usage
-Make sure you have all the [required](#Requirements) packages,
-You can install them in a separate environment by venv:
-```
-python3 -m venv .venv
-source .venv/bin/activate
-pip3 install -r requirements.txt
-```
 
-See `./scylla.py --help` for all options, below are some sample uses:
+See `scylla-api-client --help` for all options, below are some sample uses:
 
 * Show all API modules
     ```
-    $ ./scylla.py --list-modules
+    $ scylla-api-client --list-modules
     system
     compaction_manager
     gossiper
@@ -42,7 +39,7 @@ See `./scylla.py --help` for all options, below are some sample uses:
 
 * Show all API commands for specific module _system_
     ```
-    $ ./scylla.py --list-module-commands system
+    $ scylla-api-client --list-module-commands system
     system/logger:
     GET: Get all logger names
     POST: Set all logger level
@@ -57,13 +54,13 @@ See `./scylla.py --help` for all options, below are some sample uses:
 
 * Get loglevel for specific logger _httpd_
     ```
-    $ ./scylla.py system/logger/{name} GET --name httpd
+    $ scylla-api-client system/logger/{name} GET --name httpd
     "info"
     ```
 
 * Set loglevel _level=debug_ for specific logger _httpd_
     ```
-    $ ./scylla.py system/logger/{name} POST --name httpd --level debug
+    $ scylla-api-client system/logger/{name} POST --name httpd --level debug
     ```
 
 
@@ -71,23 +68,21 @@ See `./scylla.py --help` for all options, below are some sample uses:
 pytest is used for writing and executing tests
 to run tests you can execute:
 ```
+pip install -r dev-requirements.txt 
 pytest -s -v tests/
 ```
 
 
 ## Design
-
-![](scylla-cli-design.png)
+![](https://raw.githubusercontent.com/scylladb/scylla-api-client/master/scylla-cli-design.png)
 
 
 ## Release
 Releases are published automatically by GitHub Actions when a tag (v**) is pushed to GitHub.
-
-1. Update Scylla-API version on `setup.cfg`
-2. Create a release commit `release <version>`
-3. Create and push a tag based on the new version
+- Make sure you tag the correct commit
+- Pushing a tag to GitHub requires maintainers/admin privileges
 
 ```commandline
-git tag v1.0 <commit>
+git tag v1.0 <some-commit-hash>
 git push upstream v1.0
 ```
