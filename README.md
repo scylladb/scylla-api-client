@@ -1,5 +1,5 @@
-# Scylla-API
-Scylla API is a command line utility implementing a thin client directly utilizing the Scylla REST API
+# Scylla-API-Client
+Scylla API Client is a command line utility implementing a thin client directly utilizing the Scylla REST API
 
 
 ## Requirements
