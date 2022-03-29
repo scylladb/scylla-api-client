@@ -5,11 +5,11 @@ here = pathlib.Path(__file__).parent.resolve()
 long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
-    name='scylla-api',
+    name='scylla-api-client',
     description='Command line tool for managing Scylla Clusters',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/scylladb/scylla-api',
+    url='https://github.com/scylladb/scylla-api-client',
     author='ScyllaDB',
     packages=find_packages(),
     include_package_data=True,
@@ -19,13 +19,13 @@ setup(
     setup_requires=['setuptools_scm'],
     entry_points={
         'console_scripts': [
-            'scylla-api=scylla_api.__main__:main',
+            'scylla-api-client=scylla_api_client.__main__:main',
         ],
     },
     classifiers=[
         'License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)',
     ],
     project_urls={
-        'Bug Reports': 'https://github.com/scylladb/scylla-api/issues',
+        'Bug Reports': 'https://github.com/scylladb/scylla-api-client/issues',
     },
 )
