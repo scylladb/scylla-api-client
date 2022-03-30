@@ -1,14 +1,15 @@
 # Scylla-API-Client
 Scylla API Client is a command line utility implementing a thin client directly utilizing the Scylla REST API
 
-
-## Requirements
-* python > 3.8
-* requests
-* pytest (developers)
+* [Installation](#Installation)
+* [Usage](#Usage)
+* [Tests](#Tests)
+* [Design](#Design)
+* [Contributing](#Contributing)
+* [Release](#Release)
 
 ## Installation
-```
+```shell
 pip install scylla-api-client
 ```
 
@@ -65,8 +66,7 @@ See `scylla-api-client --help` for all options, below are some sample uses:
 
 
 ## Tests
-pytest is used for writing and executing tests
-to run tests you can execute:
+pytest is used for writing and executing tests, to run tests you can execute:
 ```
 pip install -r dev-requirements.txt 
 pytest -s -v tests/
@@ -78,11 +78,24 @@ pytest -s -v tests/
 
 
 ## Release
-Releases are published automatically by GitHub Actions when a tag (v**) is pushed to GitHub.
-- Make sure you tag the correct commit
-- Pushing a tag to GitHub requires maintainers/admin privileges
+Releases are automatically released via GitHub Actions when a new tag `v**` is pushed to GitHub. 
 
-```commandline
+```shell
 git tag v1.0 <some-commit-hash>
-git push upstream v1.0
+git push origin v1.0
 ```
+
+**Note:** pushing a tag to GitHub requires maintainers/admin privileges.
+
+## Contributing
+Contributions are welcomed! please create a fork and open a pull request to submit your changes,
+
+Contributing requires installation from source:
+1. Clone scylla-api-client repository
+2. Install development tools by `pip install -r dev-requirements.txt`
+3. Install scylla-api-client from source by `python3 setup.py install --user`
+
+Once installed, scylla-api-client can be used by `python3 -m scylla_api_client`
+
+**Note:** by installing from source, the package will be installed under `$HOME/.local/bin` and depending on your OS  
+may require adding this folder to you $PATH ex. `export PATH=$PATH:$HOME/.local/bin`.
