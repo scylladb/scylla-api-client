@@ -6,7 +6,7 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
     name='scylla-api-client',
-    description='Command line tool for managing Scylla Clusters',
+    description='Command line tool for managing Scylla database nodes',
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/scylladb/scylla-api-client',
