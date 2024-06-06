@@ -22,6 +22,8 @@ setup(
             'scylla-api-client=scylla_api_client.__main__:main',
         ],
     },
+    license='GNU AGPL 3.0',
+    license_files=('LICENSE.AGPL',),
     classifiers=[
         'License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)',
     ],
