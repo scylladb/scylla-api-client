@@ -85,7 +85,7 @@ class ScyllaApiOption:
                  allowed_values=[], help:str='', path=None):
         self.name = name
         self.required = required
-        if (not ptype in ["array", "double", "boolean", "long", "string"]):
+        if (not ptype in ["array", "double", "boolean", "integer", "long", "string", "dict"]):
             log.warning(f"Unsupported option type {ptype} for operation {path} option {name}")
         self.type = ptype
         self.param_type = param_type
@@ -278,7 +278,7 @@ class ScyllaApiCommand:
             for param_def in operation_def["parameters"]:
                 method.add_option(ScyllaApiOption(param_def["name"],
                     required=param_def.get("required", False),
-                    ptype=param_def.get("type", None),
+                    ptype=param_def.get("type", param_def.get("schema", {"type": None})["type"]),
                     param_type=param_def.get("paramType", 'query'),
                     allowed_values=param_def.get("enum", []),
                     help=param_def["description"],
