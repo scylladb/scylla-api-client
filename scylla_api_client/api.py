@@ -82,11 +82,11 @@ class OrderedDict:
 class ScyllaApiOption:
     # init Command
     def __init__(self, name:str, required:bool = False, ptype:str=None, param_type:str='query',
-                 allowed_values=[], help:str=''):
+                 allowed_values=[], help:str='', path=None):
         self.name = name
         self.required = required
         if (not ptype in ["array", "double", "boolean", "long", "string"]):
-            log.warn(f"Unsupported option type {ptype} for option {name}")
+            log.warning(f"Unsupported option type {ptype} for operation {path} option {name}")
         self.type = ptype
         self.param_type = param_type
         if self.type == "boolean":
@@ -281,7 +281,8 @@ class ScyllaApiCommand:
                     ptype=param_def.get("type", None),
                     param_type=param_def.get("paramType", 'query'),
                     allowed_values=param_def.get("enum", []),
-                    help=param_def["description"]))
+                    help=param_def["description"],
+                    path=command_json["path"]))
             self.add_method(method)
 
     def invoke(self, node_address:str, port:int, argv=[], pretty_printer:PrettyPrinter=None):
