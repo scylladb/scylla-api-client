@@ -10,7 +10,7 @@ from pprint import PrettyPrinter
 
 from .rest.scylla_rest_client import ScyllaRestClient
 
-log = logging.getLogger('scylla.cli')
+log = logging.getLogger('scylla.api')
 
 """
 A dictionary that keeps the insertion order
